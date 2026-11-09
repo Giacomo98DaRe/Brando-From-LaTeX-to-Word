@@ -9,7 +9,7 @@ description = "Local Overleaf project to editable Word desktop converter"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = ["PySide6-Essentials==6.10.1", "python-docx==1.2.0", "tex2word[pdf,mathml,csl]==1.2.0", "pylatexenc==2.10"]
+dependencies = ["PySide6-Essentials==6.10.1", "python-docx==1.2.0", "tex2word[pdf,mathml]==1.2.0", "pylatexenc==2.10"]
 
 [project.optional-dependencies]
 dev = ["pytest==9.0.2", "pyinstaller==6.17.0"]

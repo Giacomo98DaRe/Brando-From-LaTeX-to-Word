@@ -11,9 +11,11 @@ import shutil
 import subprocess
 import sys
 
+from brando import __version__
+
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ["tex2word", "python-docx", "PySide6-Essentials", "shiboken6", "lxml",
-           "pylatexenc", "Pillow", "pypdfium2", "latex2mathml", "citeproc-py", "typing-extensions"]
+           "pylatexenc", "Pillow", "pypdfium2", "latex2mathml", "typing-extensions"]
 
 
 def notices(target: Path):
@@ -52,11 +54,14 @@ def notices(target: Path):
 
 def main():
     stage = ROOT / "build/notices"
+    if stage.exists():
+        if not stage.resolve().is_relative_to(ROOT / "build"):
+            raise RuntimeError("Notice staging must remain inside the build directory.")
+        shutil.rmtree(stage)
     notices(stage)
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--windowed",
                "--name", "Brando", "--paths", str(ROOT / "src"),
-               "--collect-all", "tex2word", "--collect-all", "pypdfium2",
-               "--collect-all", "pypdfium2_raw", "--collect-data", "latex2mathml",
+               "--collect-data", "tex2word", "--collect-data", "latex2mathml",
                "--copy-metadata", "tex2word", "--copy-metadata", "pylatexenc",
                "--distpath", str(ROOT / "dist"), "--workpath", str(ROOT / "build/pyinstaller"),
                "--specpath", str(ROOT / "build"), str(ROOT / "scripts/desktop_entry.py")]
@@ -85,13 +90,13 @@ def main():
     for name in ("LICENSE", "THIRD_PARTY_NOTICES.md", "README.md"):
         shutil.copyfile(ROOT / name, data / name)
     shutil.copytree(ROOT / "examples/article", data / "example-project", dirs_exist_ok=True)
-    manifest = {"app_version": "0.1.0", "os": platform.platform(), "architecture": platform.machine(),
+    manifest = {"app_version": __version__, "os": platform.platform(), "architecture": platform.machine(),
                 "python": platform.python_version(), "validation": "development build; clean-machine and document rendering checks are separate",
                 "uv_lock_sha256": sha256((ROOT / "uv.lock").read_bytes()).hexdigest(),
                 "files": {p.relative_to(package).as_posix(): sha256(p.read_bytes()).hexdigest()
                           for p in package.rglob("*") if p.is_file()}}
     (data / "build-manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    tag = f"Brando-0.1.0-{sys.platform}-{platform.machine()}"
+    tag = f"Brando-{__version__}-{sys.platform}-{platform.machine()}"
     if sys.platform == "darwin":
         archive = str(ROOT / "dist" / (tag + ".zip"))
         subprocess.run(["/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", "--keepParent",

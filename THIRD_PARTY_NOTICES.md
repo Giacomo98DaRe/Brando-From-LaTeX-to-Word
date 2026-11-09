@@ -20,7 +20,6 @@ to `third-party-notices/versions.json`, and copies available original notices wi
 | Pillow | 13.0.0 | MIT-CMU and bundled image-library notices |
 | pypdfium2 / PDFium | 5.15.1 | Apache-2.0 / BSD-3-Clause and PDFium dependency notices |
 | latex2mathml | 3.81.1 | MIT; wheel and source archive omit a license file, supplemented from upstream |
-| citeproc-py | 0.12.1 | BSD-2-Clause-Views |
 | typing_extensions | 4.16.0 | PSF-2.0 |
 | Microsoft Visual C++ runtime on Windows | 14.44.35211.0 | Microsoft redistributable terms require final distribution review |
 

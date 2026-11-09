@@ -19,7 +19,7 @@ dependencies = [
     { name = "pylatexenc" },
     { name = "pyside6-essentials" },
     { name = "python-docx" },
-    { name = "tex2word", extra = ["csl", "mathml", "pdf"] },
+    { name = "tex2word", extra = ["mathml", "pdf"] },
 ]
 
 [package.optional-dependencies]
@@ -39,21 +39,9 @@ requires-dist = [
     { name = "pyside6-essentials", specifier = "==6.10.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
     { name = "python-docx", specifier = "==1.2.0" },
-    { name = "tex2word", extras = ["pdf", "mathml", "csl"], specifier = "==1.2.0" },
+    { name = "tex2word", extras = ["pdf", "mathml"], specifier = "==1.2.0" },
 ]
 provides-extras = ["dev", "evaluation"]
-
-[[package]]
-name = "citeproc-py"
-version = "0.12.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/44/2d265b22c554e1718b0a021aa6037f922869df2569a7f4e3e1b133baf885/citeproc_py-0.12.1.tar.gz", hash = "sha256:497c626a79e738cceb06e6144d216d120814649d7d01c157fbdbe837149f4599", size = 294688, upload-time = "2026-10-30T16:52:56.818Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/e6/b4b77a734b1dd853677f968b70e73429596fb543407eedfaa6dd9aa5ebe5/citeproc_py-0.12.1-py3-none-any.whl", hash = "sha256:41f2b5d58ca65f9184ccb71f0ccd62454a17dc4a94b8a39454f447a2d94d688f", size = 388337, upload-time = "2026-10-30T16:52:54.979Z" },
-]
 
 [[package]]
 name = "colorama"
@@ -494,9 +482,6 @@ wheels = [
 ]
 
 [package.optional-dependencies]
-csl = [
-    { name = "citeproc-py" },
-]
 mathml = [
     { name = "latex2mathml" },
 ]

@@ -1,6 +1,7 @@
 """Exercise a packaged app with development tool discovery removed from its environment."""
 from __future__ import annotations
 
+from io import BytesIO
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,8 @@ import sys
 import tempfile
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
+
+from PIL import Image
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
@@ -32,13 +35,21 @@ def main():
                        capture_output=True, timeout=20, check=True)
         # Test ZIP import through an enclosing directory without altering synthetic sources.
         archive = work / "Project with spaces é.zip"
+        figure = BytesIO()
+        Image.new("RGB", (120, 80), "#345678").save(figure, format="PDF")
         with ZipFile(archive, "w") as z:
             for f in (ROOT / "examples/article").rglob("*"):
                 if f.is_file():
                     data = f.read_bytes()
                     if f.name == "main.tex":
-                        data = data.replace(rb"\end{document}", rb"\todo{Inline package review}\end{document}")
+                        addition = (
+                            rb"\begin{figure}\includegraphics{figure.pdf}"
+                            rb"\caption{Synthetic PDF figure}\end{figure}"
+                            rb"\todo{Inline package review}\end{document}"
+                        )
+                        data = data.replace(rb"\end{document}", addition)
                     z.writestr("Enclosing/" + f.relative_to(ROOT / "examples/article").as_posix(), data)
+            z.writestr("Enclosing/figure.pdf", figure.getvalue())
         for comments in (False, True):
             command = [str(executable), "--convert", str(archive), "--destination", str(work / "out")]
             if comments:
@@ -57,6 +68,8 @@ def main():
                     assert phrase in text, phrase
                 assert len(list(doc.iter(f"{{{M}}}oMath"))) >= 2
                 assert len(list(doc.iter(f"{{{W}}}tbl"))) == 1
+                assert len(list(doc.iter(f"{{{W}}}drawing"))) >= 1
+                assert any(name.startswith("word/media/") and name.endswith(".png") for name in z.namelist())
                 assert ("word/comments.xml" in z.namelist()) == bool(index)
             report = json.loads((output.parent / "conversion-report.json").read_text())
             assert not report["independent_source_observations"]["missing_numeric_tables"]
@@ -93,7 +106,7 @@ def main():
                                 env=environment, capture_output=True, timeout=20)
         assert failed.returncode == 1
         assert "blocked" in (failing / "worker-error.txt").read_text(encoding="utf-8")
-    print("Relocated packaged Qt startup and ZIP conversion passed with comments off/on and restricted PATH.")
+    print("Relocated packaged Qt startup, PDF figure and ZIP conversion passed with comments off/on and restricted PATH.")
     print("Worker failure returned diagnostics within the timeout. Clean-machine and rendering checks remain pending.")
 
 

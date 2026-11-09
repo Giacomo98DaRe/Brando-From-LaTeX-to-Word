@@ -33,11 +33,14 @@ The smoke script relocates the bundle to a path with spaces and Unicode, checks 
 startup, uses a restricted child PATH and clears Python/Conda environment variables.
 This catches many accidental external-tool dependencies; it **does not replace a clean VM**
 where development tools are absent. It invokes the packaged app's internal CLI using the
-original synthetic example, then checks independent DOCX text/math/table/comment expectations.
+original synthetic example plus a generated PDF figure, then checks independent DOCX
+text/math/table/comment/image expectations.
 It also verifies that a worker error returns a diagnostic file within a bounded timeout.
 
 On Windows the builder also isolates PATH to the project Python runtime and Windows system
 directories. This prevents DLLs from unrelated development tools entering dependency analysis.
+Engine resources are collected as data. PDFium uses the installed PyInstaller hooks for its
+shared library and version data, with PDF rasterization exercised by the packaged smoke check.
 PyInstaller uses a clean analysis and a workspace-local cache on every build.
 
 ## Before declaring a Windows release usable
