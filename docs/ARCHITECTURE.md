@@ -1,7 +1,7 @@
 # Architecture
 
 - `project.py`: bounded byte capture from folders/ZIPs, enclosing-directory normalization,
-  path checks, encoding fallback and heuristic main-root discovery. No source writes.
+  path checks, encoding fallback, source comments and heuristic main-root discovery.
 - `engine_worker.py`: isolated tex2word pure-parser process. Python audit events restrict file
   reads to the captured project/work directory and installed runtime resource directories;
   subprocesses and sockets are disabled. This is not a general OS sandbox for arbitrary code.
@@ -11,11 +11,14 @@
 - `fidelity.py`: independent static include traversal, conservative title/author text checks
   and simple-tabular signed/decimal/scientific numeric-token checks. Skipped constructs are
   explicit; these observations do not establish full content equivalence.
-- `core.py`: options, capture, worker timeout/cancellation, postprocessing, native source
-  comments, verification observations and immutable timestamped exports. No GUI dependency.
+- `core.py` coordinates options, capture, the cancellable worker, independent observations
+  and atomic timestamped exports.
+- `word.py` owns DOCX inspection, review formatting and native source-comment handling.
 - `gui.py`: PySide6 Widgets controls, background tasks, local drag/drop and output opening.
   Import and conversion never block the UI thread. Word is opened only on user action.
 - `cli.py`: development/automation adapter to the same core.
+- `__main__.py` dispatches GUI, CLI and isolated-worker modes. The frozen build uses this
+  same entry point through a minimal wrapper.
 - `scripts/build.py`: platform-local freezing, notice collection, portable archive and manifest.
 
 The GUI caches the byte snapshot captured when an input is selected. Conversion uses those

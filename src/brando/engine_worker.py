@@ -11,7 +11,7 @@ import sys
 def run(request_file: str) -> int:
     from tex2word import convert_source
     import tex2word
-    from .project import decode, strip_comments
+    from .project import decode, document_class, strip_comments
     from .adapters import adapt_source
 
     request_path = Path(request_file).resolve()
@@ -40,8 +40,7 @@ def run(request_file: str) -> int:
     if request.get("class_override"):
         text = strip_comments(text)
         text = re.sub(r"(\\documentclass(?:\s*\[[^]]*\])?\s*\{)[^}]+", lambda m: m[1] + request["class_override"], text, count=1)
-    class_match = re.search(r"\\documentclass(?:\s*\[[^]]*\])?\s*\{([^}]+)\}", strip_comments(text))
-    family = class_match[1] if class_match else ""
+    family = document_class(strip_comments(text))
     adaptations = []
     template_adaptations = []
     for file in project.rglob("*"):

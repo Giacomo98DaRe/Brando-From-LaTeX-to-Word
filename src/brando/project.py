@@ -48,8 +48,8 @@ class Project:
             if not name.lower().endswith(".tex"):
                 continue
             text = strip_comments(decode(data)[0])
-            cls = re.search(r"\\documentclass(?:\s*\[[^]]*\])?\s*\{([^}]+)\}", text)
-            if cls and cls[1] != "subfiles" and re.search(r"\\begin\s*\{document\}", text):
+            cls = document_class(text)
+            if cls and cls != "subfiles" and re.search(r"\\begin\s*\{document\}", text):
                 candidates.append(name)
         return sorted(candidates)
 
@@ -59,6 +59,12 @@ def decode(data: bytes) -> tuple[str, str]:
         return data.decode("utf-8-sig"), "utf-8"
     except UnicodeDecodeError:
         return data.decode("cp1252"), "cp1252"
+
+
+def document_class(source: str) -> str:
+    """Read the class name from comment-free LaTeX source."""
+    match = re.search(r"\\documentclass(?:\s*\[[^]]*\])?\s*\{([^}]+)\}", source)
+    return match[1] if match else ""
 
 
 def split_comment(line: str) -> tuple[str, str | None]:
@@ -135,3 +141,23 @@ def capture(path: Path, cancel: threading.Event | None = None) -> Project:
     if not any(n.lower().endswith(".tex") for n in files):
         raise ConversionError("No LaTeX source files were found.")
     return Project(files, "/".join(enclosing))
+
+
+def source_notes(project: Project) -> tuple[list[dict], list[str]]:
+    notes, skipped = [], []
+    for name, data in sorted(project.files.items()):
+        if Path(name).suffix.lower() not in {".tex", ".bib"}:
+            continue
+        text, _ = decode(data)
+        literal = False
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if re.search(r"\\begin\{(?:verbatim\*?|lstlisting|minted)\}", line):
+                literal = True
+                skipped.append(f"{name}:{line_number}: literal environment comments not collected")
+            if not literal:
+                _, note = split_comment(line)
+                if note and note.strip():
+                    notes.append({"file": name, "line": line_number, "text": note.lstrip("% ")})
+            if re.search(r"\\end\{(?:verbatim\*?|lstlisting|minted)\}", line):
+                literal = False
+    return notes, skipped
