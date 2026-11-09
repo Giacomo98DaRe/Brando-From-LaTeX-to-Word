@@ -19,15 +19,18 @@ def argument(text: str, start: int) -> tuple[str, int]:
         start += 1
     if start >= len(text) or text[start] != "{":
         raise ValueError("Expected a static braced argument")
-    depth, i = 1, start + 1
-    while i < len(text):
-        if text[i] == "\\":
-            i += 2
+    depth, index = 1, start + 1
+    while index < len(text):
+        if text[index] == "\\":
+            index += 2
             continue
-        depth += (text[i] == "{") - (text[i] == "}")
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
         if depth == 0:
-            return text[start + 1:i], i + 1
-        i += 1
+            return text[start + 1:index], index + 1
+        index += 1
     raise ValueError("Unbalanced argument")
 
 
@@ -42,14 +45,12 @@ def commands(text: str, name: str) -> list[str]:
 
 
 def source_text(project: Project, main: str) -> tuple[str, list[str]]:
-    visited: list[str] = []
     unresolved: list[str] = []
 
     def expand(name: str, stack: tuple[str, ...]) -> str:
         if name in stack or len(stack) > 40:
             unresolved.append(f"Cyclic or excessive include depth: {name}")
             return ""
-        visited.append(name)
         text = strip_comments(decode(project.files[name])[0])
         text = re.sub(r"\\begin\{(verbatim\*?|lstlisting|minted)\}.*?\\end\{\1\}", "", text, flags=re.S)
         if name != main and re.search(r"\\documentclass(?:\[[^]]*\])?\{subfiles\}", text):
@@ -74,6 +75,7 @@ def source_text(project: Project, main: str) -> tuple[str, list[str]]:
 
 
 def numbers(text: str) -> list[str]:
+    """Keep each value's sign and scientific exponent in the same token."""
     text = text.replace("\u2212", "-").replace("\u2013", "-")
     text = text.replace(r"\times", "×").replace(r"\cdot", "·")
     text = re.sub(r"\\(?:,|;|!|quad\b|qquad\b|thinspace\b)", "", text)
@@ -85,7 +87,11 @@ def observe(project: Project, main: str, docx: PathLike) -> dict:
     source, unresolved = source_text(project, main)
     with ZipFile(docx) as z:
         doc = ET.fromstring(z.read("word/document.xml"))
-    text_of = lambda e: "".join(t.text or "" for t in e.iter() if t.tag in {f"{{{W}}}t", f"{{{M}}}t"})
+    def text_of(element: ET.Element) -> str:
+        return "".join(
+            node.text or "" for node in element.iter()
+            if node.tag in {f"{{{W}}}t", f"{{{M}}}t"}
+        )
     word_text = " ".join(text_of(doc).split())
     output_tables = [numbers(" | ".join(text_of(cell) for cell in table.iter(f"{{{W}}}tc")))
                      for table in doc.iter(f"{{{W}}}tbl")]

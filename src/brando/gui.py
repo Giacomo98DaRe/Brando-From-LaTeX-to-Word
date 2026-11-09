@@ -18,6 +18,14 @@ from .core import Options, TEMPLATES, convert, detect_template
 from .project import Project, Cancelled, capture, decode
 
 
+def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
+    row = QHBoxLayout()
+    row.addWidget(field, 1)
+    for button in buttons:
+        row.addWidget(button)
+    return row
+
+
 class Task(QThread):
     succeeded = Signal(object)
     failed = Signal(str)
@@ -69,11 +77,7 @@ class Window(QMainWindow):
         self.folder_button = QPushButton("Folder…")
         self.zip_button.clicked.connect(self.choose_zip)
         self.folder_button.clicked.connect(self.choose_folder)
-        row = QHBoxLayout()
-        row.addWidget(self.input, 1)
-        row.addWidget(self.zip_button)
-        row.addWidget(self.folder_button)
-        form.addRow("Project", row)
+        form.addRow("Project", _file_row(self.input, self.zip_button, self.folder_button))
         self.root = QComboBox()
         self.root.setEditable(True)
         self.root.currentTextChanged.connect(self.update_template)
@@ -92,10 +96,7 @@ class Window(QMainWindow):
         self.reference.setPlaceholderText("Select a reference Word file")
         self.reference_button = QPushButton("Browse…")
         self.reference_button.clicked.connect(self.choose_reference)
-        refrow = QHBoxLayout()
-        refrow.addWidget(self.reference)
-        refrow.addWidget(self.reference_button)
-        form.addRow("Reference", refrow)
+        form.addRow("Reference", _file_row(self.reference, self.reference_button))
         self.comments = QCheckBox("Include source comments")
         self.comments.setToolTip("Native Word comments in a source-location appendix. Includes unused .tex/.bib files. Overleaf Review discussions are not included.")
         form.addRow("", self.comments)
@@ -104,10 +105,7 @@ class Window(QMainWindow):
         self.destination.setText(str(Path(documents) / "Brando exports"))
         self.destination_button = QPushButton("Browse…")
         self.destination_button.clicked.connect(self.choose_destination)
-        destrow = QHBoxLayout()
-        destrow.addWidget(self.destination)
-        destrow.addWidget(self.destination_button)
-        form.addRow("Destination", destrow)
+        form.addRow("Destination", _file_row(self.destination, self.destination_button))
         layout.addLayout(form)
         self.convert_button = QPushButton("Convert to Word")
         self.convert_button.setMinimumHeight(40)
@@ -150,13 +148,13 @@ class Window(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "Overleaf source ZIP", "", "ZIP archives (*.zip)")
         if path:
             self.input.setText(path)
-            self.scan()
+            self.scan(force=True)
 
     def choose_folder(self):
         path = QFileDialog.getExistingDirectory(self, "Project folder")
         if path:
             self.input.setText(path)
-            self.scan()
+            self.scan(force=True)
 
     def choose_reference(self):
         path, _ = QFileDialog.getOpenFileName(self, "Reference Word file", "", "Word files (*.docx)")
@@ -209,10 +207,12 @@ class Window(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.log.appendPlainText("Cancelling…")
 
-    def scan(self):
+    def scan(self, force: bool = False):
         if self.task or not self.input.text().strip():
             return
         path = Path(self.input.text().strip())
+        if not force and self.project is not None and path == self.project_path:
+            return
         self.project = None
         self.project_path = None
         self.root.clear()
@@ -281,7 +281,7 @@ class Window(QMainWindow):
     def dropEvent(self, event):
         if not self.task:
             self.input.setText(event.mimeData().urls()[0].toLocalFile())
-            self.scan()
+            self.scan(force=True)
             event.acceptProposedAction()
 
     def closeEvent(self, event):

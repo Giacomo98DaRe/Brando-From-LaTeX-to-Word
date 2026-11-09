@@ -78,3 +78,27 @@ def test_ambiguous_root_is_not_auto_selected(app, tmp_path):
         assert window.root.count() == 2
     finally:
         window.close()
+
+
+def test_focus_change_keeps_main_selection_and_reselection_refreshes(app, tmp_path):
+    original = r"\documentclass{article}\begin{document}Original\end{document}"
+    (tmp_path / "main.tex").write_text(original)
+    (tmp_path / "supplement.tex").write_text(original)
+    window = Window()
+    try:
+        window.input.setText(str(tmp_path))
+        window.scan()
+        complete(app, window)
+        window.root.setCurrentText("supplement.tex")
+        window.input.editingFinished.emit()
+        assert window.task is None
+        assert window.root.currentText() == "supplement.tex"
+
+        updated = original.replace("Original", "Updated")
+        (tmp_path / "main.tex").write_text(updated)
+        window.scan(force=True)
+        complete(app, window)
+        assert window.project.files["main.tex"].decode() == updated
+        assert window.root.currentText() == ""
+    finally:
+        window.close()

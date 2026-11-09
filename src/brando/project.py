@@ -28,13 +28,17 @@ def checkpoint(cancel: threading.Event | None) -> None:
 
 def relative_path(name: str) -> str:
     name = name.replace("\\", "/")
-    p = PurePosixPath(name)
+    path = PurePosixPath(name)
     reserved = re.compile(r"^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)", re.I)
-    if (not p.parts or p.is_absolute() or any(x == ".." for x in p.parts) or ":" in name
-            or "\x00" in name or any(reserved.match(x) or x.endswith((".", " "))
-                                     or re.search(r'[<>"|?*]', x) for x in p.parts)):
+    invalid_root = not path.parts or path.is_absolute() or ":" in name or "\x00" in name
+    invalid_component = any(
+        part == ".." or reserved.match(part) or part.endswith((".", " "))
+        or re.search(r'[<>"|?*]', part)
+        for part in path.parts
+    )
+    if invalid_root or invalid_component:
         raise ConversionError(f"Project path is not allowed: {name}")
-    return p.as_posix()
+    return path.as_posix()
 
 
 @dataclass
@@ -88,7 +92,15 @@ def split_comment(line: str) -> tuple[str, str | None]:
 def strip_comments(text: str) -> str:
     # Preserve literal environments; percent characters there are content.
     parts = re.split(r"(\\begin\{(?:verbatim\*?|lstlisting|minted)\}.*?\\end\{(?:verbatim\*?|lstlisting|minted)\})", text, flags=re.S)
-    return "".join(p if i % 2 else "".join(split_comment(line)[0].rstrip("\r\n") + "\n" for line in p.splitlines(keepends=True)) for i, p in enumerate(parts))
+    cleaned = []
+    for index, part in enumerate(parts):
+        if index % 2:
+            cleaned.append(part)
+            continue
+        for line in part.splitlines(keepends=True):
+            code, _ = split_comment(line)
+            cleaned.append(code.rstrip("\r\n") + "\n")
+    return "".join(cleaned)
 
 
 def capture(path: Path, cancel: threading.Event | None = None) -> Project:
