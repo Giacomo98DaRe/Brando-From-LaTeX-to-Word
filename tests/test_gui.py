@@ -1,0 +1,80 @@
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+from pathlib import Path
+import time
+
+import pytest
+from PySide6.QtCore import QMimeData, QPointF, Qt, QUrl
+from PySide6.QtGui import QDropEvent
+from PySide6.QtWidgets import QApplication
+
+from brando.gui import Window
+from brando.core import inspect_docx
+
+EXAMPLE = Path(__file__).resolve().parents[1] / "examples/article"
+
+
+@pytest.fixture(scope="module")
+def app():
+    return QApplication.instance() or QApplication([])
+
+
+def complete(app, window):
+    deadline = time.monotonic() + 30
+    ticks = 0
+    while window.task and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(0.01)
+        ticks += 1
+    assert window.task is None, window.log.toPlainText()
+    return ticks
+
+
+def test_ui_scan_convert_and_responsiveness(app, tmp_path):
+    window = Window()
+    try:
+        assert not window.comments.isChecked()
+        window.input.setText(str(EXAMPLE))
+        window.scan()
+        assert window.cancel_button.isEnabled()
+        complete(app, window)
+        assert window.root.currentText() == "main.tex"
+        assert "Standard article" in window.detected.text()
+        window.destination.setText(str(tmp_path))
+        window.start_conversion()
+        assert complete(app, window) > 1
+        assert window.output and window.output.is_file(), window.log.toPlainText()
+        assert "Avery Example" in inspect_docx(window.output)["text"]
+        assert window.open_word.isEnabled()
+    finally:
+        window.close()
+
+
+def test_drop_project_folder(app):
+    window = Window()
+    try:
+        data = QMimeData()
+        data.setUrls([QUrl.fromLocalFile(str(EXAMPLE))])
+        event = QDropEvent(QPointF(10, 10), Qt.DropAction.CopyAction, data,
+                           Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        window.dropEvent(event)
+        complete(app, window)
+        assert window.project is not None
+    finally:
+        window.close()
+
+
+def test_ambiguous_root_is_not_auto_selected(app, tmp_path):
+    article = r"\documentclass{article}\begin{document}Text\end{document}"
+    (tmp_path / "main.tex").write_text(article)
+    (tmp_path / "supplement.tex").write_text(article)
+    window = Window()
+    try:
+        window.input.setText(str(tmp_path))
+        window.scan()
+        complete(app, window)
+        assert window.root.currentText() == ""
+        assert window.root.count() == 2
+    finally:
+        window.close()
