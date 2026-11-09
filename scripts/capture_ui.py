@@ -1,11 +1,14 @@
 """Generate a real Qt UI screenshot using only the synthetic example and relative paths."""
-import os
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from pathlib import Path
-import time
 
-from PySide6.QtWidgets import QApplication
+import os
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+import time
+from pathlib import Path
+
 from PySide6.QtGui import QFont, QFontDatabase
+from PySide6.QtWidgets import QApplication
+
 from brando.gui import Window
 
 ROOT = Path(__file__).resolve().parents[1]

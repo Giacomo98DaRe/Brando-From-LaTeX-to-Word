@@ -1,4 +1,5 @@
 """Word package inspection, review formatting and native source comments."""
+
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
@@ -10,6 +11,7 @@ M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 
 
 def inspect_docx(path: Path) -> dict:
+    """Validate package XML and count Word structures without inferring rendering fidelity."""
     with ZipFile(path) as z:
         if z.testzip():
             raise ConversionError("The generated DOCX archive is damaged.")
@@ -17,20 +19,32 @@ def inspect_docx(path: Path) -> dict:
             if name.endswith(".xml"):
                 ET.fromstring(z.read(name))
         doc = ET.fromstring(z.read("word/document.xml"))
-        comment_count = (len(ET.fromstring(z.read("word/comments.xml")))
-                         if "word/comments.xml" in z.namelist() else 0)
-        text = "\n".join("".join(t.text or "" for t in p.iter() if t.tag in {f"{{{W}}}t", f"{{{M}}}t"}) for p in doc.iter(f"{{{W}}}p"))
-        return {"text": text, "tables": len(list(doc.iter(f"{{{W}}}tbl"))),
-                "native_equations": len(list(doc.iter(f"{{{M}}}oMath"))),
-                "images": len([n for n in z.namelist() if n.startswith("word/media/")]),
-                "native_comments": bool(comment_count), "native_comment_count": comment_count}
+        comment_count = (
+            len(ET.fromstring(z.read("word/comments.xml")))
+            if "word/comments.xml" in z.namelist()
+            else 0
+        )
+        text = "\n".join(
+            "".join(t.text or "" for t in p.iter() if t.tag in {f"{{{W}}}t", f"{{{M}}}t"})
+            for p in doc.iter(f"{{{W}}}p")
+        )
+        return {
+            "text": text,
+            "tables": len(list(doc.iter(f"{{{W}}}tbl"))),
+            "native_equations": len(list(doc.iter(f"{{{M}}}oMath"))),
+            "images": len([n for n in z.namelist() if n.startswith("word/media/")]),
+            "native_comments": bool(comment_count),
+            "native_comment_count": comment_count,
+        }
 
 
 def finish_docx(path: Path, review: bool, notes: list[dict], include_comments: bool) -> None:
+    """Apply review styling and the source-comment choice to a generated Word file."""
     from docx import Document
     from docx.opc.constants import RELATIONSHIP_TYPE as RT
     from docx.shared import Inches, Pt
     from lxml import etree
+
     doc = Document(path)
     if not include_comments:
         # The engine also creates comments for inline todo/comment/note macros.
@@ -39,11 +53,17 @@ def finish_docx(path: Path, review: bool, notes: list[dict], include_comments: b
             for key, relation in list(part.rels.items()):
                 if relation.reltype == RT.COMMENTS:
                     del part.rels[key]
-            if not (str(part.partname).startswith("/word/") and str(part.partname).endswith(".xml")):
+            if not (
+                str(part.partname).startswith("/word/") and str(part.partname).endswith(".xml")
+            ):
                 continue
             element = getattr(part, "_element", None)
             root = element if element is not None else etree.fromstring(part.blob)
-            markers = {f"{{{W}}}commentRangeStart", f"{{{W}}}commentRangeEnd", f"{{{W}}}commentReference"}
+            markers = {
+                f"{{{W}}}commentRangeStart",
+                f"{{{W}}}commentRangeEnd",
+                f"{{{W}}}commentReference",
+            }
             for marker in list(root.iter()):
                 if marker.tag in markers:
                     marker.getparent().remove(marker)
@@ -77,7 +97,12 @@ def finish_docx(path: Path, review: bool, notes: list[dict], include_comments: b
                 cols.set(f"{{{W}}}num", "1")
     if notes:
         doc.add_heading("Source annotations", level=1)
-        doc.add_paragraph("Local source comments from all captured .tex and .bib files, including unused files. Comments are attached to source-location entries below; manuscript positions are not inferred. Overleaf Review-panel discussions are not included. No source author or date is known.")
+        doc.add_paragraph(
+            "Local source comments from all captured .tex and .bib files, including unused files. "
+            "Comments are attached to source-location entries below; "
+            "manuscript positions are not inferred. Overleaf Review-panel discussions "
+            "are not included. No source author or date is known."
+        )
         for note in notes:
             para = doc.add_paragraph()
             run = para.add_run(f"{note['file']}:{note['line']}")

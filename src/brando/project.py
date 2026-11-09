@@ -1,11 +1,12 @@
 """Bounded, read-only project capture and main-document discovery."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
 import re
 import stat
 import threading
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
 from zipfile import ZipFile
 
 MAX_BYTES = 200 * 1024 * 1024
@@ -32,7 +33,9 @@ def relative_path(name: str) -> str:
     reserved = re.compile(r"^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)", re.I)
     invalid_root = not path.parts or path.is_absolute() or ":" in name or "\x00" in name
     invalid_component = any(
-        part == ".." or reserved.match(part) or part.endswith((".", " "))
+        part == ".."
+        or reserved.match(part)
+        or part.endswith((".", " "))
         or re.search(r'[<>"|?*]', part)
         for part in path.parts
     )
@@ -83,7 +86,7 @@ def split_comment(line: str) -> tuple[str, str | None]:
         elif line[i] == "\\":
             i += 2
         elif line[i] == "%":
-            return line[:i], line[i + 1:].rstrip("\r\n")
+            return line[:i], line[i + 1 :].rstrip("\r\n")
         else:
             i += 1
     return line, None
@@ -91,7 +94,12 @@ def split_comment(line: str) -> tuple[str, str | None]:
 
 def strip_comments(text: str) -> str:
     # Preserve literal environments; percent characters there are content.
-    parts = re.split(r"(\\begin\{(?:verbatim\*?|lstlisting|minted)\}.*?\\end\{(?:verbatim\*?|lstlisting|minted)\})", text, flags=re.S)
+    parts = re.split(
+        r"(\\begin\{(?:verbatim\*?|lstlisting|minted)\}.*?"
+        r"\\end\{(?:verbatim\*?|lstlisting|minted)\})",
+        text,
+        flags=re.S,
+    )
     cleaned = []
     for index, part in enumerate(parts):
         if index % 2:
@@ -104,6 +112,7 @@ def strip_comments(text: str) -> str:
 
 
 def capture(path: Path, cancel: threading.Event | None = None) -> Project:
+    """Read a bounded byte snapshot from a folder or ZIP without changing its files."""
     path = path.resolve()
     files: dict[str, bytes] = {}
     total = 0
@@ -156,6 +165,7 @@ def capture(path: Path, cancel: threading.Event | None = None) -> Project:
 
 
 def source_notes(project: Project) -> tuple[list[dict], list[str]]:
+    """Collect percent notes with source locations, including unused captured files."""
     notes, skipped = [], []
     for name, data in sorted(project.files.items()):
         if Path(name).suffix.lower() not in {".tex", ".bib"}:

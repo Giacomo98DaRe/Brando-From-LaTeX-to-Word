@@ -53,10 +53,16 @@ Communicate with Giacomo in concise Italian. Keep code, documentation and report
   material in ignored directories immediately. Only allowlist reviewed synthetic document
   fixtures under `examples/` or `tests/fixtures/`; do not force-add private or upstream inputs.
 - Record dependency versions, licenses and distribution obligations before bundling them.
+- Prefer direct, readable functions and descriptive names. Remove proven-unused code and
+  explain non-obvious constraints in comments. Preserve independent validation checks.
+- Format maintained Python with the pinned development-only Ruff configuration. Keep
+  third-party sources, license texts and local research inputs outside formatting changes.
 
 ## Verification and commands
 
 - Run `.venv/Scripts/python.exe -m pytest` on Windows (`.venv/bin/python -m pytest` elsewhere).
+- Check Python quality with `.venv/Scripts/python.exe -m ruff check src tests scripts` and
+  `.venv/Scripts/python.exe -m ruff format --check src tests scripts` before committing Python.
 - Local engine benchmark: `.venv/Scripts/python.exe scripts/benchmark.py`; needs the ignored
   handoff bundle and evaluation-only Pandoc installation. It must never enter remote CI.
 - GUI: `.venv/Scripts/pythonw.exe -m brando`; CLI help:

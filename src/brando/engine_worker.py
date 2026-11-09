@@ -1,18 +1,20 @@
 """Isolated engine process: local file boundary and no subprocess/network use."""
+
 from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 
 
 def run(request_file: str) -> int:
-    from tex2word import convert_source
     import tex2word
-    from .project import decode, document_class, strip_comments
+    from tex2word import convert_source
+
     from .adapters import adapt_source
+    from .project import decode, document_class, strip_comments
 
     request_path = Path(request_file).resolve()
     request = json.loads(request_path.read_text(encoding="utf-8"))
@@ -25,12 +27,21 @@ def run(request_file: str) -> int:
     runtime_files = {Path(sys.executable).resolve()}
 
     def audit(event, args):
-        if event.startswith("socket.") or event in {"subprocess.Popen", "os.system", "os.startfile"}:
-            raise PermissionError("External commands and network access are disabled during conversion.")
+        if event.startswith("socket.") or event in {
+            "subprocess.Popen",
+            "os.system",
+            "os.startfile",
+        }:
+            raise PermissionError(
+                "External commands and network access are disabled during conversion."
+            )
         if event == "open" and not isinstance(args[0], int):
             target = Path(os.fsdecode(args[0])).resolve()
-            if (target not in runtime_files and not target.is_relative_to(work)
-                    and not any(target.is_relative_to(p) for p in runtime_roots)):
+            if (
+                target not in runtime_files
+                and not target.is_relative_to(work)
+                and not any(target.is_relative_to(p) for p in runtime_roots)
+            ):
                 raise PermissionError("Resource access outside the captured project was blocked.")
 
     sys.addaudithook(audit)
@@ -39,7 +50,12 @@ def run(request_file: str) -> int:
     text, encoding = decode((project / request["main"]).read_bytes())
     if request.get("class_override"):
         text = strip_comments(text)
-        text = re.sub(r"(\\documentclass(?:\s*\[[^]]*\])?\s*\{)[^}]+", lambda m: m[1] + request["class_override"], text, count=1)
+        text = re.sub(
+            r"(\\documentclass(?:\s*\[[^]]*\])?\s*\{)[^}]+",
+            lambda m: m[1] + request["class_override"],
+            text,
+            count=1,
+        )
     family = document_class(strip_comments(text))
     adaptations = []
     template_adaptations = []
@@ -55,14 +71,23 @@ def run(request_file: str) -> int:
             if detected != "utf-8" or changes or is_main:
                 file.write_text(content, encoding="utf-8")
             if detected != "utf-8":
-                adaptations.append({"file": file.relative_to(project).as_posix(), "from": detected, "to": "utf-8"})
+                adaptations.append(
+                    {"file": file.relative_to(project).as_posix(), "from": detected, "to": "utf-8"}
+                )
             if changes:
-                template_adaptations.append({"file": file.relative_to(project).as_posix(), "changes": changes})
+                template_adaptations.append(
+                    {"file": file.relative_to(project).as_posix(), "changes": changes}
+                )
     # Enter through an include so the engine keeps both the project root and the
     # selected main file's directory in its nested-input search paths.
     source = r"\input{" + request["main"] + "}"
-    result = convert_source(source, str(project), embed_manifest=False,
-                            reference_doc=request.get("reference"), math_image_fallback=False)
+    result = convert_source(
+        source,
+        str(project),
+        embed_manifest=False,
+        reference_doc=request.get("reference"),
+        math_image_fallback=False,
+    )
     (work / "converted.docx").write_bytes(result.docx)
     report = json.loads(result.report.to_json())
     report["main_encoding"] = encoding
@@ -77,9 +102,12 @@ def main(request_file: str) -> int:
         return run(request_file)
     except Exception:
         import traceback
+
         # A windowed frozen executable has no Python stderr. Persist errors for
         # the parent instead of letting the bootloader display a blocking dialog.
-        Path(request_file).with_name("worker-error.txt").write_text(traceback.format_exc(), encoding="utf-8")
+        Path(request_file).with_name("worker-error.txt").write_text(
+            traceback.format_exc(), encoding="utf-8"
+        )
         return 1
 
 

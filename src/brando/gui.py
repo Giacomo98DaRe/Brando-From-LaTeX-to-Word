@@ -1,21 +1,34 @@
 """Small desktop shell; import and conversion run away from the UI thread."""
+
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
 import threading
+from pathlib import Path
 
-from PySide6.QtCore import QThread, Signal, QTimer, QUrl, QStandardPaths
+from PySide6.QtCore import QStandardPaths, QThread, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
-    QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from .core import Options, TEMPLATES, convert, detect_template
-from .project import Project, Cancelled, capture, decode
+from .core import TEMPLATES, Options, convert, detect_template
+from .project import Cancelled, Project, capture, decode
 
 
 def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
@@ -65,7 +78,9 @@ class Window(QMainWindow):
         title_font.setWeight(QFont.Weight.DemiBold)
         title.setFont(title_font)
         layout.addWidget(title)
-        intro = QLabel("Drop an Overleaf source ZIP or project folder here. Conversion stays on this computer.")
+        intro = QLabel(
+            "Drop an Overleaf source ZIP or project folder here. Conversion stays on this computer."
+        )
         intro.setWordWrap(True)
         layout.addWidget(intro)
         form = QFormLayout()
@@ -85,7 +100,9 @@ class Window(QMainWindow):
         self.template = QComboBox()
         self.template.addItems(TEMPLATES)
         form.addRow("Source template", self.template)
-        self.detected = QLabel("Template support is experimental. Choose a main document to see detection.")
+        self.detected = QLabel(
+            "Template support is experimental. Choose a main document to see detection."
+        )
         self.detected.setWordWrap(True)
         form.addRow("", self.detected)
         self.layout_choice = QComboBox()
@@ -98,10 +115,15 @@ class Window(QMainWindow):
         self.reference_button.clicked.connect(self.choose_reference)
         form.addRow("Reference", _file_row(self.reference, self.reference_button))
         self.comments = QCheckBox("Include source comments")
-        self.comments.setToolTip("Native Word comments in a source-location appendix. Includes unused .tex/.bib files. Overleaf Review discussions are not included.")
+        self.comments.setToolTip(
+            "Native Word comments in a source-location appendix. "
+            "Includes unused .tex/.bib files. Overleaf Review discussions are not included."
+        )
         form.addRow("", self.comments)
         self.destination = QLineEdit()
-        documents = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+        documents = QStandardPaths.writableLocation(
+            QStandardPaths.StandardLocation.DocumentsLocation
+        )
         self.destination.setText(str(Path(documents) / "Brando exports"))
         self.destination_button = QPushButton("Browse…")
         self.destination_button.clicked.connect(self.choose_destination)
@@ -130,7 +152,9 @@ class Window(QMainWindow):
         self.open_word = QPushButton("Open Word file")
         self.open_folder = QPushButton("Open output folder")
         self.open_word.clicked.connect(lambda: self.open_path(self.output))
-        self.open_folder.clicked.connect(lambda: self.open_path(self.output.parent if self.output else None))
+        self.open_folder.clicked.connect(
+            lambda: self.open_path(self.output.parent if self.output else None)
+        )
         self.open_word.setEnabled(False)
         self.open_folder.setEnabled(False)
         bottom = QHBoxLayout()
@@ -145,7 +169,9 @@ class Window(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def choose_zip(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Overleaf source ZIP", "", "ZIP archives (*.zip)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Overleaf source ZIP", "", "ZIP archives (*.zip)"
+        )
         if path:
             self.input.setText(path)
             self.scan(force=True)
@@ -157,7 +183,9 @@ class Window(QMainWindow):
             self.scan(force=True)
 
     def choose_reference(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Reference Word file", "", "Word files (*.docx)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Reference Word file", "", "Word files (*.docx)"
+        )
         if path:
             self.reference.setText(path)
 
@@ -172,9 +200,17 @@ class Window(QMainWindow):
         self.reference_button.setEnabled(enabled)
 
     def set_busy(self, busy):
-        for widget in (self.input, self.zip_button, self.folder_button, self.root,
-                       self.template, self.layout_choice, self.comments, self.destination,
-                       self.destination_button):
+        for widget in (
+            self.input,
+            self.zip_button,
+            self.folder_button,
+            self.root,
+            self.template,
+            self.layout_choice,
+            self.comments,
+            self.destination,
+            self.destination_button,
+        ):
             widget.setEnabled(not busy)
         self.reference.setEnabled(not busy and self.layout_choice.currentIndex() == 1)
         self.reference_button.setEnabled(self.reference.isEnabled())
@@ -211,6 +247,8 @@ class Window(QMainWindow):
         if self.task or not self.input.text().strip():
             return
         path = Path(self.input.text().strip())
+        # Focus changes retain the snapshot and manual root selection. Explicit
+        # reselection refreshes source bytes that may have changed on disk.
         if not force and self.project is not None and path == self.project_path:
             return
         self.project = None
@@ -233,7 +271,9 @@ class Window(QMainWindow):
             self.root.setEditText("")
         self.root.blockSignals(False)
         self.update_template()
-        message = f"Captured {len(self.project.files)} files; {len(candidates)} candidate main documents."
+        message = (
+            f"Captured {len(self.project.files)} files; {len(candidates)} candidate main documents."
+        )
         if len(candidates) != 1:
             message += " Select the manuscript root; supplements are converted separately."
         self.log.appendPlainText(message)
@@ -241,26 +281,41 @@ class Window(QMainWindow):
     def update_template(self):
         if self.project and self.root.currentText() in self.project.files:
             name = detect_template(decode(self.project.files[self.root.currentText()])[0])
-            self.detected.setText(f"Detected: {name}. Support: experimental; inspect the output and notes.")
+            self.detected.setText(
+                f"Detected: {name}. Support: experimental; inspect the output and notes."
+            )
 
     def start_conversion(self):
         if not self.project or not self.project_path or self.task:
             return
         if not self.root.currentText() or not self.destination.text().strip():
-            QMessageBox.information(self, "Choose document and destination", "Select a main document and an output folder.")
+            QMessageBox.information(
+                self,
+                "Choose document and destination",
+                "Select a main document and an output folder.",
+            )
             return
         ref = None
         if self.layout_choice.currentIndex() == 1:
             if not self.reference.text().strip():
-                QMessageBox.information(self, "Choose a reference", "Select a reference DOCX or use the readable review layout.")
+                QMessageBox.information(
+                    self,
+                    "Choose a reference",
+                    "Select a reference DOCX or use the readable review layout.",
+                )
                 return
             ref = Path(self.reference.text())
-        opts = Options(self.root.currentText(), self.template.currentText(), self.comments.isChecked(), ref)
+        opts = Options(
+            self.root.currentText(), self.template.currentText(), self.comments.isChecked(), ref
+        )
         path, project, destination = self.project_path, self.project, Path(self.destination.text())
         self.open_word.setEnabled(False)
         self.open_folder.setEnabled(False)
         self.log.clear()
-        self.run_task(lambda cancel, progress: convert(path, destination, opts, cancel, progress, project), self.converted)
+        self.run_task(
+            lambda cancel, progress: convert(path, destination, opts, cancel, progress, project),
+            self.converted,
+        )
 
     def converted(self, path):
         self.output = path
@@ -268,7 +323,9 @@ class Window(QMainWindow):
         self.log.appendPlainText(f"Saved: {path}")
         for warning in report["warnings"]:
             self.log.appendPlainText("• " + warning)
-        self.log.appendPlainText("Review content and layout before sharing. Full details: conversion-report.json.")
+        self.log.appendPlainText(
+            "Review content and layout before sharing. Full details: conversion-report.json."
+        )
         self.open_word.setEnabled(True)
         self.open_folder.setEnabled(True)
         self.bar.setValue(1)

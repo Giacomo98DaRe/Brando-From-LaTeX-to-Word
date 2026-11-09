@@ -25,6 +25,7 @@ to `third-party-notices/versions.json`, and copies available original notices wi
 
 PyInstaller 6.17.0 is a build tool with a GPL exception for generated bundles. Pandoc 3.9
 and pypandoc_binary 1.17 are local evaluation tools only, excluded from the application.
+Ruff 0.17.4 is an MIT-licensed development formatter/linter, excluded from the application.
 No third-party CSL style or sample manuscript is bundled; engine-provided styles retain
 the engine's original notices. The example project is original synthetic material.
 

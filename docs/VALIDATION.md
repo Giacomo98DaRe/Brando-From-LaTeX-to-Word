@@ -4,12 +4,14 @@ Date: 2026-11-09. Development host: Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 38 passing tests on the Windows host.
+- Full synthetic regression suite completed with 39 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
   Additional regressions cover Springer contribution notes/bottom rules, protected literal
   examples, adaptation reporting, source preservation and Unicode review-list fonts.
+  Focus changes retain a manually selected main document; explicit reselection refreshes
+  the captured project. The source UI screenshot matches the pre-cleanup image byte-for-byte.
 - Five template families retain independently specified synthetic title, author, affiliation
   (where supplied), abstract, keywords and body expectations.
 - Synthetic end-to-end checks exercise nested relative inputs, spaces/Unicode paths, original
@@ -20,6 +22,8 @@ Date: 2026-11-09. Development host: Windows x86-64, CPython 3.12.16.
   timeout are exercised. These are proportionate workflow checks, not an OS-sandbox proof.
 - Shared engine comparison and real corpus folder/ZIP conversions completed; see
   [engine evaluation](ENGINE_EVALUATION.md). These tests do not certify complete content.
+  The cleanup rerun passed all 40 expected-text checks across ten imports. Relocated package
+  checks additionally verify rasterization of an original synthetic PDF figure to a PNG.
 - Microsoft Word 16.0 build 16.0.14334 opened the synthetic example read-only and recognized
   two native equations, one table, one footnote and three comments. Checked author, included
   text and signed values were present. Word exported one PDF page. Visual inspection of its
@@ -63,6 +67,13 @@ The corrected package passed relocated offscreen Qt startup, ZIP conversion with
 off/on, independent number checks and a bounded worker-error diagnostic test. The child PATH
 contained only Windows system tools. These checks used the existing development host.
 
+The 2026-11-09 dependency check found that the locked pypdfium2 5.15.1 release had been
+withdrawn because of object cleanup during interpreter exit. The lock still records the
+tested baseline. Review and validate an upstream correction before public distribution.
+The upstream changelog also records native fixes in 5.15, so a downgrade needs separate review.
+[PyPI release metadata](https://pypi.org/pypi/pypdfium2/5.15.1/json),
+[upstream changelog](https://pypdfium2-team.github.io/pypdfium2/changelog.html).
+
 ## Pending final checks
 
 - Interactive packaged GUI acceptance on a clean Windows VM.
@@ -71,6 +82,7 @@ contained only Windows system tools. These checks used the existing development 
 - Separate LibreOffice compatibility check and version record.
 - Native macOS and Ubuntu builds, GUI/clean-machine tests and distribution checks.
 - Complete Qt bundled notices/corresponding-source provision before public binary distribution.
+- Resolve the withdrawn PDFium binding release and repeat PDF/package acceptance checks.
 
 No platform is declared publicly supported. Build generation, DOCX structural integrity,
 source-content observations, application portability and document rendering remain distinct.

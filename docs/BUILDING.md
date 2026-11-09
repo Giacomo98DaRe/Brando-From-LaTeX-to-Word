@@ -19,6 +19,8 @@ claimed byte-for-byte deterministic. Record the native build host and run tests 
 
 ```powershell
 uv sync --frozen --extra dev --python 3.12
+.venv/Scripts/python.exe -m ruff check src tests scripts
+.venv/Scripts/python.exe -m ruff format --check src tests scripts
 .venv/Scripts/python.exe -m pytest
 .venv/Scripts/python.exe scripts/build.py
 .venv/Scripts/python.exe scripts/smoke_package.py dist/Brando/Brando.exe

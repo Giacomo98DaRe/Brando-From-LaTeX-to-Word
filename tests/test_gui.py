@@ -1,16 +1,17 @@
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from pathlib import Path
 import time
+from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QMimeData, QPointF, Qt, QUrl
 from PySide6.QtGui import QDropEvent
 from PySide6.QtWidgets import QApplication
 
-from brando.gui import Window
 from brando.core import inspect_docx
+from brando.gui import Window
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/article"
 
@@ -56,8 +57,13 @@ def test_drop_project_folder(app):
     try:
         data = QMimeData()
         data.setUrls([QUrl.fromLocalFile(str(EXAMPLE))])
-        event = QDropEvent(QPointF(10, 10), Qt.DropAction.CopyAction, data,
-                           Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        event = QDropEvent(
+            QPointF(10, 10),
+            Qt.DropAction.CopyAction,
+            data,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
         window.dropEvent(event)
         complete(app, window)
         assert window.project is not None

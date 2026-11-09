@@ -78,11 +78,16 @@ a scientific Conda environment. From a checkout:
 
 ```powershell
 uv sync --frozen --extra dev --python 3.12
+.venv/Scripts/python.exe -m ruff check src tests scripts
+.venv/Scripts/python.exe -m ruff format --check src tests scripts
 .venv/Scripts/python.exe -m pytest
 .venv/Scripts/pythonw.exe -m brando
 ```
 
-On macOS/Linux use `.venv/bin/python` for tests and GUI. The developer CLI is available as:
+Ruff is a pinned development-only tool. Use `ruff format src tests scripts` to apply the
+maintained formatting. Comments explain constraints and non-obvious choices.
+
+On macOS/Linux use `.venv/bin/python` for checks and GUI. The developer CLI is available as:
 
 ```powershell
 .venv/Scripts/python.exe -m brando.cli examples/article --destination outputs

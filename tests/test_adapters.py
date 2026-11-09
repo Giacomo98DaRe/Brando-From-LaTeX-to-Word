@@ -1,17 +1,21 @@
 import json
-from zipfile import ZipFile
 from xml.etree import ElementTree as ET
+from zipfile import ZipFile
 
 from brando.adapters import adapt_source
-from brando.core import convert, inspect_docx, W
+from brando.core import W, convert, inspect_docx
 
 
 def test_springer_adapter_preserves_literal_examples_and_other_families():
     source = (
-        r"\botrule\equalcont{Equal \textbf{contribution}.}" "\n"
-        r"\verb|\botrule|" "\n"
-        r"\begin{verbatim}\equalcont{Example}\botrule\end{verbatim}" "\n"
-        r"% \botrule should remain a source comment" "\n"
+        r"\botrule\equalcont{Equal \textbf{contribution}.}"
+        "\n"
+        r"\verb|\botrule|"
+        "\n"
+        r"\begin{verbatim}\equalcont{Example}\botrule\end{verbatim}"
+        "\n"
+        r"% \botrule should remain a source comment"
+        "\n"
     )
     adapted, changes = adapt_source(source, "sn-jnl")
     assert changes == {"springer_bottom_rule": 1, "springer_equal_contribution": 1}
@@ -24,7 +28,10 @@ def test_springer_adapter_preserves_literal_examples_and_other_families():
 def test_springer_notes_and_rules_are_readable_and_reported(tmp_path):
     folder = tmp_path / "source"
     folder.mkdir()
-    main = r"\documentclass{sn-jnl}\begin{document}\title{Test}\author{Alice Example}\equalcont{Equal \textbf{contribution}.}\maketitle\input{table}\end{document}"
+    main = (
+        r"\documentclass{sn-jnl}\begin{document}\title{Test}\author{Alice Example}"
+        r"\equalcont{Equal \textbf{contribution}.}\maketitle\input{table}\end{document}"
+    )
     table = r"\begin{tabular}{lr}Negative & -0.25 \\ Positive & +0.125 \\ \botrule\end{tabular}"
     (folder / "main.tex").write_text(main)
     (folder / "table.tex").write_text(table)
@@ -51,8 +58,11 @@ def test_review_bullets_use_a_unicode_font(tmp_path):
     result = convert(folder, tmp_path / "out")
     with ZipFile(result) as archive:
         numbering = ET.fromstring(archive.read("word/numbering.xml"))
-    bullet_levels = [level for level in numbering.iter(f"{{{W}}}lvl")
-                     if level.find(f"{{{W}}}numFmt").get(f"{{{W}}}val") == "bullet"]
+    bullet_levels = [
+        level
+        for level in numbering.iter(f"{{{W}}}lvl")
+        if level.find(f"{{{W}}}numFmt").get(f"{{{W}}}val") == "bullet"
+    ]
     assert bullet_levels
     for level in bullet_levels:
         assert level.find(f"{{{W}}}rPr/{{{W}}}rFonts").get(f"{{{W}}}ascii") == "Calibri"
