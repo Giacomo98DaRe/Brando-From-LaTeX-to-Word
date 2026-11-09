@@ -1,0 +1,79 @@
+# Local research inputs and agent working memory (never public repository content).
+# Keep the original handoff/corpus unchanged; publish only reviewed synthetic fixtures.
+/overleaf_word_handoff/
+/evaluation/
+/history/
+/local-projects/
+/private/
+/downloads/
+
+# Workspace-local toolchains and Python environments.
+/.tools/
+/.venv/
+/venv/
+/env/
+
+# Python bytecode, package metadata and development caches.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Generated builds, portable application packages and conversion results.
+# Versioned build scripts, dependency locks and license texts stay in source control.
+/build/
+/dist/
+/outputs/
+/artifacts/
+/screenshots-local/
+
+# Imported manuscripts, document exports and downloaded archives are private by default.
+# Only original/reviewed examples and regression fixtures are eligible for versioning.
+*.tex
+*.bib
+*.docx
+*.pdf
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+!examples/**/*.tex
+!examples/**/*.bib
+!examples/**/*.docx
+!examples/**/*.pdf
+!examples/**/*.zip
+!tests/fixtures/**/*.tex
+!tests/fixtures/**/*.bib
+!tests/fixtures/**/*.docx
+!tests/fixtures/**/*.pdf
+!tests/fixtures/**/*.zip
+
+# Local credentials/configuration. Sanitized example configuration may be versioned.
+.env
+.env.*
+!.env.example
+/.secrets/
+/.aws/
+/.codex/
+
+# Personal IDE state, OS metadata and transient editor/Office files.
+/.vscode/
+/.idea/
+/.vs/
+*.code-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+~$*

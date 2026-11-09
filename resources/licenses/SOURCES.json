@@ -1,0 +1,18 @@
+{
+  "retrieved": "2026-11-09",
+  "notes": "Qt texts from version tag; latex2mathml text from upstream master because both 3.81.1 PyPI artifacts omit license files; 3.81.1 metadata declares MIT. Preserve original copyright text.",
+  "files": {
+    "LGPL-3.0-only.txt": {
+      "url": "https://code.qt.io/cgit/pyside/pyside-setup.git/plain/LICENSES/LGPL-3.0-only.txt?h=v6.10.1",
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+    },
+    "GPL-3.0-only.txt": {
+      "url": "https://code.qt.io/cgit/pyside/pyside-setup.git/plain/LICENSES/GPL-3.0-only.txt?h=v6.10.1",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    "latex2mathml-LICENSE": {
+      "url": "https://raw.githubusercontent.com/roniemartinez/latex2mathml/master/LICENSE",
+      "sha256": "4ac1e1da07f6b343d54191c5e1716840534e08591b3f9eaec90d6800cdc47543"
+    }
+  }
+}

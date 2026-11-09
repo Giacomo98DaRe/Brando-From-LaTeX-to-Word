@@ -1,0 +1,14 @@
+# Use consistent source/documentation line endings across development platforms.
+* text=auto eol=lf
+
+# Preserve retrieved third-party texts byte for byte for provenance hash checks.
+resources/licenses/* -text
+resources/licenses/SOURCES.json text eol=lf
+
+# Binary fixtures and visual assets must never undergo text conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.docx binary
+*.pdf binary
+*.zip binary
