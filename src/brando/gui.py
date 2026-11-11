@@ -7,14 +7,13 @@ import sys
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QStandardPaths, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QFont
+from PySide6.QtCore import QStandardPaths, Qt, QThread, QTimer, QUrl, Signal
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QComboBox,
     QFileDialog,
-    QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -23,14 +22,17 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QToolButton,
-    QToolTip,
     QVBoxLayout,
     QWidget,
 )
 
+from .appearance import application_icon, apply_theme
 from .core import TEMPLATES, Options, convert, detect_template
 from .project import Cancelled, Project, capture, decode, source_notes
+from .widgets import DropArea, Switch, dropped_project, option_label
 
 
 def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
@@ -39,28 +41,6 @@ def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
     for button in buttons:
         row.addWidget(button)
     return row
-
-
-def _option_label(text: str, explanation: str) -> QWidget:
-    label = QWidget()
-    row = QHBoxLayout(label)
-    row.setContentsMargins(0, 0, 0, 0)
-    row.setSpacing(5)
-    row.addWidget(QLabel(text))
-    info = QToolButton()
-    info.setObjectName("optionInfo")
-    info.setText("i")
-    info.setAutoRaise(True)
-    info.setFixedSize(22, 22)
-    info.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-    info.setAccessibleName(f"About {text.lower()}")
-    info.setToolTip(explanation)
-    info.clicked.connect(
-        lambda: QToolTip.showText(info.mapToGlobal(QPoint(0, info.height())), explanation, info)
-    )
-    row.addWidget(info)
-    row.addStretch()
-    return label
 
 
 class Task(QThread):
@@ -85,8 +65,10 @@ class Task(QThread):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Brando — LaTeX to Word")
-        self.resize(790, 710)
+        self.setWindowTitle("Brando - LaTeX to Word")
+        self.setWindowIcon(application_icon())
+        self.resize(1160, 820)
+        self.setMinimumSize(880, 620)
         self.setAcceptDrops(True)
         self.project: Project | None = None
         self.project_path: Path | None = None
@@ -94,155 +76,243 @@ class Window(QMainWindow):
         self.task: Task | None = None
         self.output: Path | None = None
         body = QWidget()
+        body.setObjectName("windowBody")
         self.setCentralWidget(body)
         layout = QVBoxLayout(body)
-        layout.setContentsMargins(28, 24, 28, 24)
-        title = QLabel("From your project to Word")
-        title_font = title.font()
-        title_font.setPointSize(21)
-        title_font.setWeight(QFont.Weight.DemiBold)
-        title.setFont(title_font)
-        layout.addWidget(title)
-        intro = QLabel(
-            "Drop an Overleaf source ZIP or project folder here. Conversion stays on this computer."
-        )
-        intro.setWordWrap(True)
-        layout.addWidget(intro)
-        form = QFormLayout()
-        form.setSpacing(12)
-        self.input = QLineEdit()
-        self.input.setPlaceholderText("Select or drop a project")
+        layout.setContentsMargins(28, 22, 28, 22)
+        layout.setSpacing(14)
+        layout.addLayout(self.build_header())
+
+        content = QWidget()
+        columns = QHBoxLayout(content)
+        columns.setContentsMargins(0, 0, 0, 0)
+        columns.setSpacing(22)
+        left = QVBoxLayout()
+        left.setSpacing(14)
+        self.drop_area = DropArea(application_icon())
+        self.drop_area.projectDropped.connect(self.select_project)
+        self.input = self.drop_area.input
+        self.zip_button = self.drop_area.zip_button
+        self.folder_button = self.drop_area.folder_button
         self.input.editingFinished.connect(self.scan)
-        self.zip_button = QPushButton("ZIP…")
-        self.folder_button = QPushButton("Folder…")
         self.zip_button.clicked.connect(self.choose_zip)
         self.folder_button.clicked.connect(self.choose_folder)
-        form.addRow(
-            _option_label("Project", "Choose an Overleaf source ZIP or a project folder."),
-            _file_row(self.input, self.zip_button, self.folder_button),
+        left.addWidget(self.drop_area, 1)
+        left.addWidget(self.build_comments())
+        columns.addLayout(left, 5)
+        columns.addWidget(self.build_options(), 3)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(content)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        layout.addWidget(scroll, 1)
+
+        self.details_button = QToolButton()
+        self.details_button.setText("Conversion notes")
+        self.details_button.setCheckable(True)
+        self.details_button.setArrowType(Qt.ArrowType.RightArrow)
+        self.details_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.details_button.toggled.connect(self.show_details)
+        layout.addWidget(self.details_button, 0, Qt.AlignmentFlag.AlignLeft)
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setMinimumHeight(100)
+        self.log.setMaximumHeight(140)
+        self.log.setPlaceholderText("Conversion notes appear here.")
+        self.log.hide()
+        layout.addWidget(self.log)
+        layout.addLayout(self.build_actions())
+        self.layout_changed()
+        self.update_comment_status()
+        self.theme_toggle.toggled.connect(lambda dark: apply_theme(self, dark))
+        apply_theme(self, False)
+
+    def build_header(self) -> QHBoxLayout:
+        header = QHBoxLayout()
+        picture = QLabel()
+        picture.setPixmap(application_icon().pixmap(48, 48))
+        header.addWidget(picture)
+        brand = QVBoxLayout()
+        brand.setSpacing(0)
+        title = QLabel("brando")
+        title.setObjectName("brandTitle")
+        subtitle = QLabel("LaTeX to editable Word")
+        subtitle.setProperty("secondary", True)
+        brand.addWidget(title)
+        brand.addWidget(subtitle)
+        header.addLayout(brand)
+        header.addStretch()
+        theme_caption = option_label(
+            "Deep Tide",
+            "Switch between Lagoon and Deep Tide colors. The layout and conversion choices "
+            "stay in place. Each new window starts in Lagoon.",
         )
-        self.root = QComboBox()
-        self.root.setEditable(True)
-        self.root.currentTextChanged.connect(self.update_template)
-        form.addRow(
-            _option_label(
-                "Main document",
-                "Choose the .tex file that starts the manuscript. Convert supplements separately.",
+        theme_caption.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        header.addWidget(theme_caption)
+        self.theme_toggle = Switch("Use Deep Tide colors")
+        self.theme_toggle.setToolTip("Use Deep Tide colors")
+        header.addWidget(self.theme_toggle)
+        return header
+
+    def build_comments(self) -> QFrame:
+        card = QFrame()
+        card.setObjectName("commentsCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(8)
+        row = QHBoxLayout()
+        row.addWidget(
+            option_label(
+                "Include source comments",
+                "Opt in to native Word comments. Matching percent notes appear beside manuscript "
+                "paragraphs. Unmatched notes and unused files use Source annotations. Supported "
+                "inline annotations keep engine anchors. Overleaf Review discussions require "
+                "a separate source. Track Changes is a separate Word feature.",
+                "commentTitle",
             ),
-            self.root,
+            1,
         )
-        self.template = QComboBox()
-        self.template.addItems(TEMPLATES)
-        form.addRow(
-            _option_label(
-                "Source template",
-                "Auto uses the LaTeX document class. "
-                "Overrides change how the source is interpreted. "
-                "All template families are experimental.",
-            ),
-            self.template,
-        )
-        self.detected = QLabel(
-            "Template support is experimental. Choose a main document to see detection."
-        )
-        self.detected.setWordWrap(True)
-        form.addRow("", self.detected)
-        self.layout_choice = QComboBox()
-        self.layout_choice.addItems(["Readable review", "Reference DOCX"])
-        self.layout_choice.currentIndexChanged.connect(self.layout_changed)
-        form.addRow(
-            _option_label(
-                "Word layout",
-                "Readable review uses a single-column Word layout. Reference DOCX uses styles "
-                "and page settings from a Word file you choose.",
-            ),
-            self.layout_choice,
-        )
-        self.reference = QLineEdit()
-        self.reference.setPlaceholderText("Select a reference Word file")
-        self.reference_button = QPushButton("Browse…")
-        self.reference_button.clicked.connect(self.choose_reference)
-        form.addRow(
-            _option_label(
-                "Reference", "Choose a DOCX whose styles and page settings will be used."
-            ),
-            _file_row(self.reference, self.reference_button),
-        )
-        self.comments = QCheckBox("Include source comments")
-        self.comments.setToolTip(
-            "Native Word comments beside matching manuscript paragraphs. "
-            "Unmatched notes use a source-location appendix. Includes unused .tex/.bib files."
-        )
+        self.comments = Switch("Include source comments")
+        self.comments.setToolTip("Include native Word comments in this export")
+        self.comments.toggled.connect(self.update_comment_status)
+        row.addWidget(self.comments)
+        layout.addLayout(row)
         self.comment_status = QLabel()
         self.comment_status.setWordWrap(True)
-        self.comments.toggled.connect(self.update_comment_status)
-        comment_options = QWidget()
-        comment_layout = QVBoxLayout(comment_options)
-        comment_layout.setContentsMargins(0, 0, 0, 0)
-        comment_layout.addWidget(self.comments)
-        comment_layout.addWidget(self.comment_status)
-        form.addRow(
-            _option_label(
-                "Source comments",
-                "Opt in to native Word comments. Percent notes from captured .tex/.bib files "
-                "use matching manuscript paragraphs, with an appendix for unmatched notes "
-                "and unused files. Supported inline annotations "
-                "keep engine anchors. Overleaf Review discussions require a separate source. "
-                "Track Changes is a separate Word feature.",
-            ),
-            comment_options,
-        )
-        self.update_comment_status()
+        self.comment_status.setProperty("secondary", True)
+        layout.addWidget(self.comment_status)
+        return card
+
+    def build_options(self) -> QFrame:
+        card = QFrame()
+        card.setObjectName("optionsCard")
+        card.setMinimumWidth(336)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(22, 18, 22, 18)
+        layout.setSpacing(12)
+        heading = QLabel("Conversion options")
+        heading.setObjectName("sectionTitle")
+        layout.addWidget(heading)
+        self.root = QComboBox()
+        self.root.setEditable(True)
+        self.root.setAccessibleName("Main document")
+        self.root.setPlaceholderText("Choose a project first")
+        self.root.currentTextChanged.connect(self.update_template)
+        self.template = QComboBox()
+        self.template.setAccessibleName("Source template")
+        self.template.addItems(TEMPLATES)
+        self.layout_choice = QComboBox()
+        self.layout_choice.setAccessibleName("Word layout")
+        self.layout_choice.addItems(["Readable review", "Reference DOCX"])
+        self.layout_choice.currentIndexChanged.connect(self.layout_changed)
+        self.reference = QLineEdit()
+        self.reference.setAccessibleName("Reference DOCX path")
+        self.reference.setPlaceholderText("Choose a Word style reference")
+        self.reference_button = QPushButton("...")
+        self.reference_button.setAccessibleName("Browse reference Word document")
+        self.reference_button.clicked.connect(self.choose_reference)
         self.destination = QLineEdit()
+        self.destination.setAccessibleName("Export destination")
         documents = QStandardPaths.writableLocation(
             QStandardPaths.StandardLocation.DocumentsLocation
         )
         self.destination.setText(str(Path(documents) / "Brando_exports"))
-        self.destination_button = QPushButton("Browse…")
+        self.destination_button = QPushButton("...")
+        self.destination_button.setAccessibleName("Browse export destination")
         self.destination_button.clicked.connect(self.choose_destination)
-        form.addRow(
-            _option_label(
-                "Destination",
-                "Choose where to save the Word document and conversion notes. "
-                "Each conversion creates a new export folder.",
+        for title, explanation, field, buttons in (
+            (
+                "Main document",
+                "Choose the .tex manuscript root. Convert supplements separately.",
+                self.root,
+                (),
             ),
-            _file_row(self.destination, self.destination_button),
-        )
-        layout.addLayout(form)
-        self.convert_button = QPushButton("Convert to Word")
-        self.convert_button.setMinimumHeight(40)
-        self.convert_button.setEnabled(False)
-        self.convert_button.clicked.connect(self.start_conversion)
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setEnabled(False)
-        self.cancel_button.clicked.connect(self.cancel_task)
+            (
+                "Source template",
+                "Auto reads the LaTeX document class. Overrides change source "
+                "interpretation. All template families are experimental.",
+                self.template,
+                (),
+            ),
+            (
+                "Word layout",
+                "Readable review uses one column. Reference DOCX uses styles and "
+                "page settings from a Word file you choose.",
+                self.layout_choice,
+                (),
+            ),
+            (
+                "Reference DOCX",
+                "Choose a DOCX supplying styles and page settings.",
+                self.reference,
+                (self.reference_button,),
+            ),
+            (
+                "Destination",
+                "Each conversion creates a new folder containing Word, conversion "
+                "notes and a report.",
+                self.destination,
+                (self.destination_button,),
+            ),
+        ):
+            group = QVBoxLayout()
+            group.setSpacing(5)
+            group.addWidget(option_label(title, explanation))
+            group.addLayout(_file_row(field, *buttons))
+            layout.addLayout(group)
+        self.detected = QLabel("Template support is experimental.")
+        self.detected.setProperty("secondary", True)
+        self.detected.setWordWrap(True)
+        self.detected.setTextFormat(Qt.TextFormat.PlainText)
+        layout.addWidget(self.detected)
+        layout.addStretch()
+        return card
+
+    def build_actions(self) -> QHBoxLayout:
         actions = QHBoxLayout()
-        actions.addWidget(self.convert_button, 1)
-        actions.addWidget(self.cancel_button)
-        layout.addLayout(actions)
+        self.status = QLabel("Choose a project to begin.")
+        self.status.setWordWrap(True)
+        self.status.setTextFormat(Qt.TextFormat.PlainText)
+        state = QVBoxLayout()
+        state.addWidget(self.status)
         self.bar = QProgressBar()
         self.bar.setRange(0, 1)
-        self.bar.setValue(0)
         self.bar.setTextVisible(False)
-        layout.addWidget(self.bar)
-        self.log = QPlainTextEdit()
-        self.log.setReadOnly(True)
-        self.log.setPlaceholderText("Conversion notes and any unsupported content appear here.")
-        layout.addWidget(self.log, 1)
+        self.bar.hide()
+        state.addWidget(self.bar)
+        actions.addLayout(state, 1)
         self.open_word = QPushButton("Open Word file")
-        self.open_folder = QPushButton("Open output folder")
+        self.open_folder = QPushButton("Open folder")
         self.open_word.clicked.connect(lambda: self.open_path(self.output))
         self.open_folder.clicked.connect(
             lambda: self.open_path(self.output.parent if self.output else None)
         )
-        self.open_word.setEnabled(False)
-        self.open_folder.setEnabled(False)
-        bottom = QHBoxLayout()
-        bottom.addWidget(self.open_word)
-        bottom.addWidget(self.open_folder)
-        bottom.addStretch()
-        layout.addLayout(bottom)
-        self.layout_changed()
+        for button in (self.open_word, self.open_folder):
+            button.setEnabled(False)
+            button.hide()
+            actions.addWidget(button)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setEnabled(False)
+        self.cancel_button.clicked.connect(self.cancel_task)
+        self.cancel_button.hide()
+        actions.addWidget(self.cancel_button)
+        self.convert_button = QPushButton("Convert to Word")
+        self.convert_button.setObjectName("convertButton")
+        self.convert_button.setMinimumSize(200, 44)
+        self.convert_button.setEnabled(False)
+        self.convert_button.clicked.connect(self.start_conversion)
+        actions.addWidget(self.convert_button)
+        return actions
+
+    def show_details(self, visible: bool):
+        self.log.setVisible(visible)
+        self.details_button.setArrowType(
+            Qt.ArrowType.DownArrow if visible else Qt.ArrowType.RightArrow
+        )
+
+    def select_project(self, path: str):
+        self.input.setText(path)
+        self.scan(force=True)
 
     def open_path(self, path):
         if path:
@@ -284,9 +354,8 @@ class Window(QMainWindow):
         detected = f"{count} percent source notes detected. " if count is not None else ""
         if self.comments.isChecked():
             self.comment_status.setText(
-                detected + "Enabled. Matching notes appear beside manuscript text. "
-                "Unmatched notes use the final Source annotations section. "
-                "Supported inline annotations keep engine anchors."
+                detected + "On. Matching notes appear beside the text. "
+                "Unmatched notes use Source annotations."
             )
         else:
             self.comment_status.setText(detected + "Off. Source comments will be omitted.")
@@ -308,12 +377,17 @@ class Window(QMainWindow):
         self.reference_button.setEnabled(self.reference.isEnabled())
         self.convert_button.setEnabled(not busy and self.project is not None)
         self.cancel_button.setEnabled(busy)
+        self.cancel_button.setVisible(busy)
+        self.drop_area.setAcceptDrops(not busy)
+        self.setAcceptDrops(not busy)
         self.bar.setRange(0, 0 if busy else 1)
+        self.bar.setVisible(busy)
 
     def run_task(self, action, success):
         self.set_busy(True)
         self.task = Task(action, self)
         self.task.progress.connect(self.log.appendPlainText)
+        self.task.progress.connect(self.status.setText)
         self.task.succeeded.connect(success)
         self.task.failed.connect(self.task_failed)
         self.task.finished.connect(self.task_finished)
@@ -321,6 +395,8 @@ class Window(QMainWindow):
 
     def task_failed(self, message):
         self.log.appendPlainText(message)
+        self.status.setText(message)
+        self.details_button.setChecked(True)
 
     def task_finished(self):
         task = self.task
@@ -349,6 +425,8 @@ class Window(QMainWindow):
         self.update_comment_status()
         self.root.clear()
         self.log.clear()
+        self.status.setText("Reading the project...")
+        self.drop_area.summary.setText("Reading the project...")
         self.log.appendPlainText("Reading the project…")
 
         def read_project(cancel, progress):
@@ -375,6 +453,8 @@ class Window(QMainWindow):
         if len(candidates) != 1:
             self.root.setCurrentIndex(-1)
             self.root.setEditText("")
+        else:
+            self.root.setCurrentIndex(0)
         self.root.blockSignals(False)
         self.update_template()
         message = (
@@ -383,6 +463,12 @@ class Window(QMainWindow):
         if len(candidates) != 1:
             message += " Select the manuscript root; supplements are converted separately."
         self.log.appendPlainText(message)
+        self.drop_area.summary.setText(
+            f"{len(self.project.files)} captured files. {len(candidates)} candidate main documents."
+        )
+        self.status.setText(
+            "Ready to convert." if len(candidates) == 1 else "Choose a main document."
+        )
 
     def update_template(self):
         if self.project and self.root.currentText() in self.project.files:
@@ -417,6 +503,8 @@ class Window(QMainWindow):
         path, project, destination = self.project_path, self.project, Path(self.destination.text())
         self.open_word.setEnabled(False)
         self.open_folder.setEnabled(False)
+        self.open_word.hide()
+        self.open_folder.hide()
         self.log.clear()
         self.run_task(
             lambda cancel, progress: convert(path, destination, opts, cancel, progress, project),
@@ -443,17 +531,26 @@ class Window(QMainWindow):
         )
         self.open_word.setEnabled(True)
         self.open_folder.setEnabled(True)
+        self.open_word.show()
+        self.open_folder.show()
+        self.status.setText("Word file ready.")
+        self.details_button.setChecked(bool(report["warnings"]))
         self.bar.setValue(1)
 
     def dragEnterEvent(self, event):
-        if not self.task and event.mimeData().hasUrls() and len(event.mimeData().urls()) == 1:
-            if event.mimeData().urls()[0].isLocalFile():
-                event.acceptProposedAction()
+        if not self.task and dropped_project(event.mimeData()):
+            self.drop_area.set_drag_active(True)
+            event.acceptProposedAction()
+
+    def dragLeaveEvent(self, event):
+        self.drop_area.set_drag_active(False)
+        event.accept()
 
     def dropEvent(self, event):
-        if not self.task:
-            self.input.setText(event.mimeData().urls()[0].toLocalFile())
-            self.scan(force=True)
+        self.drop_area.set_drag_active(False)
+        path = dropped_project(event.mimeData())
+        if not self.task and path:
+            self.select_project(path)
             event.acceptProposedAction()
 
     def closeEvent(self, event):
