@@ -3,8 +3,9 @@
 from pathlib import Path
 from string import Template
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon, QPalette
-from PySide6.QtWidgets import QToolTip, QWidget
+from PySide6.QtWidgets import QApplication, QToolTip, QWidget
 
 from .desktop import set_titlebar_theme
 from .widgets import Switch
@@ -79,6 +80,10 @@ def apply_theme(window: QWidget, dark: bool) -> None:
         palette.setColor(role, QColor(colors[key]))
     window.setPalette(palette)
     QToolTip.setPalette(palette)
+    # Native tooltip fades can overlap rapid changes between adjacent help controls.
+    # This affects only Brando's Qt process, not Windows animation preferences.
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateTooltip, False)
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_FadeTooltip, False)
     stylesheet = Template((RESOURCES / "desktop.qss").read_text(encoding="utf-8"))
     window.setStyleSheet(
         stylesheet.substitute(colors, chevron=(RESOURCES / "chevron.svg").as_posix())

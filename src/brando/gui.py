@@ -34,7 +34,7 @@ from .appearance import application_icon, apply_theme
 from .core import TEMPLATES, Options, convert, detect_template
 from .desktop import set_process_identity
 from .project import Cancelled, Project, capture, decode, source_notes
-from .widgets import DropArea, Switch, dropped_project, option_label
+from .widgets import DropArea, InformationButton, Switch, dropped_project, option_label
 
 
 def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
@@ -96,7 +96,8 @@ class Window(QMainWindow):
         self.input = self.drop_area.input
         self.zip_button = self.drop_area.zip_button
         self.folder_button = self.drop_area.folder_button
-        self.input.editingFinished.connect(self.scan)
+        self.input.returnPressed.connect(lambda: self.scan(force=True))
+        self.input.textEdited.connect(self.project_path_edited)
         self.zip_button.clicked.connect(self.choose_zip)
         self.folder_button.clicked.connect(self.choose_folder)
         left.addWidget(self.drop_area, 1)
@@ -110,19 +111,44 @@ class Window(QMainWindow):
         layout.addWidget(scroll, 1)
 
         self.details_button = QToolButton()
-        self.details_button.setText("Conversion notes")
+        self.details_button.setText("Conversion details")
+        self.details_button.setEnabled(False)
         self.details_button.setCheckable(True)
         self.details_button.setArrowType(Qt.ArrowType.RightArrow)
         self.details_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.details_button.toggled.connect(self.show_details)
-        layout.addWidget(self.details_button, 0, Qt.AlignmentFlag.AlignLeft)
+        details_row = QHBoxLayout()
+        details_row.addWidget(self.details_button)
+        details_row.addWidget(
+            InformationButton(
+                "Conversion details",
+                "View progress, warnings and errors. Completed exports save notes and a report "
+                "beside the Word file. These are separate from Word comments.",
+            )
+        )
+        details_row.addStretch()
+        layout.addLayout(details_row)
+        self.details_panel = QWidget()
+        details_layout = QVBoxLayout(self.details_panel)
+        details_layout.setContentsMargins(0, 0, 0, 0)
+        details_layout.setSpacing(6)
+        details_hint = QLabel(
+            "Progress, warnings and errors from this session. Completed exports save "
+            "conversion-notes.txt and conversion-report.json beside the Word file. "
+            "These are separate from Word comments."
+        )
+        details_hint.setWordWrap(True)
+        details_hint.setProperty("secondary", True)
+        details_layout.addWidget(details_hint)
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setMinimumHeight(100)
         self.log.setMaximumHeight(140)
-        self.log.setPlaceholderText("Conversion notes appear here.")
-        self.log.hide()
-        layout.addWidget(self.log)
+        self.log.setAccessibleName("Conversion progress and warnings")
+        self.log.textChanged.connect(self.update_details)
+        details_layout.addWidget(self.log)
+        self.details_panel.hide()
+        layout.addWidget(self.details_panel)
         layout.addLayout(self.build_actions())
         self.layout_changed()
         self.update_comment_status()
@@ -136,7 +162,7 @@ class Window(QMainWindow):
         header.addWidget(picture)
         brand = QVBoxLayout()
         brand.setSpacing(0)
-        title = QLabel("brando")
+        title = QLabel("Brando")
         title.setObjectName("brandTitle")
         subtitle = QLabel("LaTeX to editable Word")
         subtitle.setProperty("secondary", True)
@@ -146,8 +172,7 @@ class Window(QMainWindow):
         header.addStretch()
         theme_caption = option_label(
             "Deep Tide",
-            "Switch between Lagoon and Deep Tide colors. The layout and conversion choices "
-            "stay in place. Each new window starts in Lagoon.",
+            "Switch between Lagoon and Deep Tide colors. Each new window starts in Lagoon.",
         )
         theme_caption.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         header.addWidget(theme_caption)
@@ -166,10 +191,8 @@ class Window(QMainWindow):
         row.addWidget(
             option_label(
                 "Include source comments",
-                "Opt in to native Word comments. Matching percent notes appear beside manuscript "
-                "paragraphs. Unmatched notes and unused files use Source annotations. Supported "
-                "inline annotations keep engine anchors. Overleaf Review discussions require "
-                "a separate source. Track Changes is a separate Word feature.",
+                "Add LaTeX notes as Word comments beside the text. Unmatched notes go to "
+                "Source annotations at the end. Overleaf Review threads are not imported.",
                 "commentTitle",
             ),
             1,
@@ -231,8 +254,8 @@ class Window(QMainWindow):
             ),
             (
                 "Source template",
-                "Auto reads the LaTeX document class. Overrides change source "
-                "interpretation. All template families are experimental.",
+                "Detect the LaTeX template automatically, or choose one. "
+                "Template support is experimental.",
                 self.template,
                 (),
             ),
@@ -307,10 +330,20 @@ class Window(QMainWindow):
         return actions
 
     def show_details(self, visible: bool):
-        self.log.setVisible(visible)
+        self.details_panel.setVisible(visible)
         self.details_button.setArrowType(
             Qt.ArrowType.DownArrow if visible else Qt.ArrowType.RightArrow
         )
+
+    def update_details(self):
+        has_entries = not self.log.document().isEmpty()
+        self.details_button.setEnabled(has_entries)
+        if not has_entries:
+            self.details_button.setChecked(False)
+
+    def project_path_edited(self):
+        self.convert_button.setEnabled(False)
+        self.status.setText("Press Enter to load this project path.")
 
     def select_project(self, path: str):
         self.input.setText(path)
@@ -377,7 +410,11 @@ class Window(QMainWindow):
             widget.setEnabled(not busy)
         self.reference.setEnabled(not busy and self.layout_choice.currentIndex() == 1)
         self.reference_button.setEnabled(self.reference.isEnabled())
-        self.convert_button.setEnabled(not busy and self.project is not None)
+        self.convert_button.setEnabled(
+            not busy
+            and self.project is not None
+            and Path(self.input.text().strip()) == self.project_path
+        )
         self.cancel_button.setEnabled(busy)
         self.cancel_button.setVisible(busy)
         self.drop_area.setAcceptDrops(not busy)
@@ -488,7 +525,12 @@ class Window(QMainWindow):
             )
 
     def start_conversion(self):
-        if not self.project or not self.project_path or self.task:
+        if (
+            not self.project
+            or not self.project_path
+            or self.task
+            or not self.convert_button.isEnabled()
+        ):
             return
         if not self.root.currentText() or not self.destination.text().strip():
             QMessageBox.information(
@@ -537,7 +579,8 @@ class Window(QMainWindow):
         for warning in report["warnings"]:
             self.log.appendPlainText("• " + warning)
         self.log.appendPlainText(
-            "Review content and layout before sharing. Full details: conversion-report.json."
+            "Saved beside Word: conversion-notes.txt and conversion-report.json. "
+            "Review content and layout before sharing."
         )
         self.open_word.setEnabled(True)
         self.open_folder.setEnabled(True)

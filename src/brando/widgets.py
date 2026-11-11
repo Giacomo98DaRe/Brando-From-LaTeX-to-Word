@@ -1,8 +1,9 @@
 """Small native desktop controls for source selection and accessible switches."""
 
+from html import escape
 from pathlib import Path
 
-from PySide6.QtCore import QMimeData, QPoint, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QMimeData, QPoint, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPen
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -18,6 +19,62 @@ from PySide6.QtWidgets import (
 )
 
 
+class InformationButton(QToolButton):
+    """Short, wrapped help anchored to its control, for hover or keyboard activation."""
+
+    def __init__(self, title: str, explanation: str):
+        super().__init__()
+        self.setObjectName("optionInfo")
+        self.setText("i")
+        self.setFixedSize(22, 22)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setAccessibleName(f"About {title.lower()}")
+        self.setAccessibleDescription(explanation)
+        # Plain tooltip strings do not wrap; escape copy before enabling Qt rich text.
+        self.setToolTip(f"<qt><p>{escape(explanation)}</p></qt>")
+        self.hover_timer = QTimer(self)
+        self.hover_timer.setSingleShot(True)
+        self.hover_timer.setInterval(250)
+        self.hover_timer.timeout.connect(self.show_help)
+        self.clicked.connect(self.show_help)
+
+    def show_help(self):
+        self.hover_timer.stop()
+        QToolTip.showText(
+            self.mapToGlobal(QPoint(0, self.height() + 4)),
+            self.toolTip(),
+            self,
+            self.rect(),
+            10000,
+        )
+
+    def enterEvent(self, event):
+        self.hover_timer.start()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.hover_timer.stop()
+        QToolTip.hideText()
+        super().leaveEvent(event)
+
+    def event(self, event):
+        # Suppress the platform's second tooltip timer and cursor-relative positioning.
+        if event.type() == QEvent.Type.ToolTip:
+            event.accept()
+            return True
+        if event.type() in (QEvent.Type.Hide, QEvent.Type.FocusOut):
+            self.hover_timer.stop()
+            QToolTip.hideText()
+        return super().event(event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            QToolTip.hideText()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+
 def option_label(text: str, explanation: str, name: str = "optionLabel") -> QWidget:
     widget = QWidget()
     row = QHBoxLayout(widget)
@@ -26,17 +83,7 @@ def option_label(text: str, explanation: str, name: str = "optionLabel") -> QWid
     label = QLabel(text)
     label.setObjectName(name)
     row.addWidget(label)
-    info = QToolButton()
-    info.setObjectName("optionInfo")
-    info.setText("i")
-    info.setFixedSize(22, 22)
-    info.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-    info.setAccessibleName(f"About {text.lower()}")
-    info.setToolTip(explanation)
-    info.clicked.connect(
-        lambda: QToolTip.showText(info.mapToGlobal(QPoint(0, info.height())), explanation, info)
-    )
-    row.addWidget(info)
+    row.addWidget(InformationButton(text, explanation))
     row.addStretch()
     return widget
 
@@ -111,9 +158,16 @@ class DropArea(QFrame):
         buttons.addStretch()
         layout.addLayout(buttons)
         layout.addStretch()
+        path_label = QLabel("Project path (optional)")
+        path_label.setProperty("secondary", True)
+        layout.addWidget(path_label)
         self.input = QLineEdit()
-        self.input.setPlaceholderText("Select or drop a project")
+        self.input.setPlaceholderText("Paste a ZIP or folder path, then press Enter")
         self.input.setAccessibleName("Project path")
+        self.input.setAccessibleDescription(
+            "Optional. Paste a project path and press Enter to load."
+        )
+        path_label.setBuddy(self.input)
         layout.addWidget(self.input)
         self.summary = QLabel("Conversion stays on this computer.")
         self.summary.setProperty("secondary", True)

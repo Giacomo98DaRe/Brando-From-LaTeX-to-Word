@@ -10,7 +10,7 @@ import pytest
 from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QToolButton
+from PySide6.QtWidgets import QApplication, QLabel, QToolButton, QToolTip
 
 from brando.core import inspect_docx
 from brando.gui import Window
@@ -41,7 +41,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
         assert not window.comments.isChecked()
         assert Path(window.destination.text()).name == "Brando_exports"
         information = window.findChildren(QToolButton, "optionInfo")
-        assert len(information) == 8
+        assert len(information) == 9
         assert all(button.toolTip() and button.accessibleName() for button in information)
         window.input.setText(str(EXAMPLE))
         window.scan()
@@ -62,6 +62,8 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
             "Source comments exported: 3" if include_comments else "Source comments were OFF"
         ) in window.log.toPlainText()
         assert window.open_word.isEnabled()
+        assert (window.output.parent / "conversion-notes.txt").is_file()
+        assert "Saved beside Word: conversion-notes.txt" in window.log.toPlainText()
         previous = window.output
         invalid = tmp_path / "invalid.zip"
         invalid.write_bytes(b"Original synthetic invalid archive")
@@ -223,5 +225,83 @@ def test_focus_change_keeps_main_selection_and_reselection_refreshes(app, tmp_pa
         complete(app, window)
         assert window.project.files["main.tex"].decode() == updated
         assert window.root.currentText() == ""
+    finally:
+        window.close()
+
+
+@pytest.mark.parametrize("dark", [False, True])
+def test_information_tips_wrap_and_stay_anchored(app, dark):
+    window = Window()
+    window.theme_toggle.setChecked(dark)
+    window.show()
+    try:
+        assert window.findChild(QLabel, "brandTitle").text() == "Brando"
+        buttons = window.findChildren(QToolButton, "optionInfo")
+        comments = next(b for b in buttons if b.accessibleName() == "About include source comments")
+        QTest.mouseMove(comments, QPoint(4, 4))
+        QTest.qWait(300)
+        assert QToolTip.isVisible()
+        assert QToolTip.text() == comments.toolTip()
+        tip = next(w for w in app.topLevelWidgets() if w.objectName() == "qtooltip_label")
+        assert tip.width() <= 340
+        assert tip.height() > 40  # Actual rendered multiline help, not an unwrapped strip.
+        geometry = tip.geometry()
+        QTest.mouseMove(comments, QPoint(16, 16))
+        QTest.qWait(30)
+        assert tip.geometry() == geometry
+
+        destination = next(b for b in buttons if b.accessibleName() == "About destination")
+        QTest.mouseMove(destination)
+        QTest.qWait(300)
+        assert QToolTip.text() == destination.toolTip()
+        assert tip.width() <= 340
+        destination.setFocus()
+        QTest.keyClick(destination, Qt.Key.Key_Space)
+        QTest.qWait(150)
+        assert QToolTip.isVisible()
+        assert QToolTip.text() == destination.toolTip()
+        QTest.keyClick(destination, Qt.Key.Key_Escape)
+        QTest.qWait(350)
+        assert not QToolTip.isVisible()
+    finally:
+        QToolTip.hideText()
+        window.close()
+
+
+def test_project_path_requires_enter_and_details_explain_saved_files(app):
+    window = Window()
+    window.show()
+    try:
+        assert not window.details_button.isEnabled()
+        assert not window.details_panel.isVisible()
+        assert "press Enter" in window.input.placeholderText()
+        window.input.setFocus()
+        QTest.keyClicks(window.input, str(EXAMPLE))
+        window.root.setFocus()
+        QTest.qWait(30)
+        assert window.task is None
+        assert window.project is None
+        window.input.setFocus()
+        QTest.keyClick(window.input, Qt.Key.Key_Return)
+        complete(app, window)
+        assert window.project is not None
+        assert window.convert_button.isEnabled()
+        assert window.details_button.isEnabled()
+        window.details_button.click()
+        assert window.details_panel.isVisible()
+        hint = " ".join(label.text() for label in window.details_panel.findChildren(QLabel))
+        assert "conversion-notes.txt" in hint and "beside the Word file" in hint
+        assert "separate from Word comments" in hint
+        assert window.log.isReadOnly()
+
+        # Editing a draft path cannot convert the previously captured project by mistake.
+        window.input.setFocus()
+        QTest.keyClicks(window.input, "-not-loaded")
+        assert not window.convert_button.isEnabled()
+        window.start_conversion()
+        assert window.task is None
+        window.log.clear()
+        assert not window.details_button.isEnabled()
+        assert not window.details_panel.isVisible()
     finally:
         window.close()
