@@ -93,11 +93,8 @@ class Window(QMainWindow):
         left.setSpacing(14)
         self.drop_area = DropArea(application_icon())
         self.drop_area.projectDropped.connect(self.select_project)
-        self.input = self.drop_area.input
         self.zip_button = self.drop_area.zip_button
         self.folder_button = self.drop_area.folder_button
-        self.input.returnPressed.connect(lambda: self.scan(force=True))
-        self.input.textEdited.connect(self.project_path_edited)
         self.zip_button.clicked.connect(self.choose_zip)
         self.folder_button.clicked.connect(self.choose_folder)
         left.addWidget(self.drop_area, 1)
@@ -171,13 +168,13 @@ class Window(QMainWindow):
         header.addLayout(brand)
         header.addStretch()
         theme_caption = option_label(
-            "Deep Tide",
-            "Switch between Lagoon and Deep Tide colors. Each new window starts in Lagoon.",
+            "Dark mode",
+            "Choose a light or dark appearance. Each new window starts in light mode.",
         )
         theme_caption.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         header.addWidget(theme_caption)
-        self.theme_toggle = Switch("Use Deep Tide colors")
-        self.theme_toggle.setToolTip("Use Deep Tide colors")
+        self.theme_toggle = Switch("Use dark mode")
+        self.theme_toggle.setToolTip("Use dark mode")
         header.addWidget(self.theme_toggle)
         return header
 
@@ -190,7 +187,7 @@ class Window(QMainWindow):
         row = QHBoxLayout()
         row.addWidget(
             option_label(
-                "Include source comments",
+                "Source comments",
                 "Add LaTeX notes as Word comments beside the text. Unmatched notes go to "
                 "Source annotations at the end. Overleaf Review threads are not imported.",
                 "commentTitle",
@@ -341,14 +338,6 @@ class Window(QMainWindow):
         if not has_entries:
             self.details_button.setChecked(False)
 
-    def project_path_edited(self):
-        self.convert_button.setEnabled(False)
-        self.status.setText("Press Enter to load this project path.")
-
-    def select_project(self, path: str):
-        self.input.setText(path)
-        self.scan(force=True)
-
     def open_path(self, path):
         if path:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
@@ -358,14 +347,12 @@ class Window(QMainWindow):
             self, "Overleaf source ZIP", "", "ZIP archives (*.zip)"
         )
         if path:
-            self.input.setText(path)
-            self.scan(force=True)
+            self.select_project(path)
 
     def choose_folder(self):
         path = QFileDialog.getExistingDirectory(self, "Project folder")
         if path:
-            self.input.setText(path)
-            self.scan(force=True)
+            self.select_project(path)
 
     def choose_reference(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -386,18 +373,18 @@ class Window(QMainWindow):
 
     def update_comment_status(self):
         count = self.source_comment_count
-        detected = f"{count} percent source notes detected. " if count is not None else ""
+        detected = f"{count} source notes found. " if count is not None else ""
         if self.comments.isChecked():
             self.comment_status.setText(
-                detected + "On. Matching notes appear beside the text. "
-                "Unmatched notes use Source annotations."
+                detected + "Source notes will be included as Word comments."
             )
         else:
-            self.comment_status.setText(detected + "Off. Source comments will be omitted.")
+            self.comment_status.setText(
+                detected + "Enable to include source notes as Word comments."
+            )
 
     def set_busy(self, busy):
         for widget in (
-            self.input,
             self.zip_button,
             self.folder_button,
             self.root,
@@ -410,11 +397,7 @@ class Window(QMainWindow):
             widget.setEnabled(not busy)
         self.reference.setEnabled(not busy and self.layout_choice.currentIndex() == 1)
         self.reference_button.setEnabled(self.reference.isEnabled())
-        self.convert_button.setEnabled(
-            not busy
-            and self.project is not None
-            and Path(self.input.text().strip()) == self.project_path
-        )
+        self.convert_button.setEnabled(not busy and self.project is not None)
         self.cancel_button.setEnabled(busy)
         self.cancel_button.setVisible(busy)
         self.drop_area.setAcceptDrops(not busy)
@@ -453,14 +436,10 @@ class Window(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.log.appendPlainText("Cancelling…")
 
-    def scan(self, force: bool = False):
-        if self.task or not self.input.text().strip():
+    def select_project(self, path: str | Path):
+        if self.task:
             return
-        path = Path(self.input.text().strip())
-        # Focus changes retain the snapshot and manual root selection. Explicit
-        # reselection refreshes source bytes that may have changed on disk.
-        if not force and self.project is not None and path == self.project_path:
-            return
+        path = Path(path)
         self.project = None
         self.project_path = None
         self.source_comment_count = None
@@ -511,7 +490,8 @@ class Window(QMainWindow):
             message += " Select the manuscript root; supplements are converted separately."
         self.log.appendPlainText(message)
         self.drop_area.summary.setText(
-            f"{len(self.project.files)} captured files. {len(candidates)} candidate main documents."
+            f"{self.project_path.name} — {len(self.project.files)} captured files. "
+            f"{len(candidates)} candidate main documents."
         )
         self.status.setText(
             "Ready to convert." if len(candidates) == 1 else "Choose a main document."
@@ -575,7 +555,7 @@ class Window(QMainWindow):
                 f"{report['inline_engine_comments']} inline)."
             )
         else:
-            self.log.appendPlainText("Source comments were OFF for this export.")
+            self.log.appendPlainText("Source comments excluded from this export.")
         for warning in report["warnings"]:
             self.log.appendPlainText("• " + warning)
         self.log.appendPlainText(

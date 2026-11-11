@@ -10,7 +10,7 @@ import pytest
 from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QLabel, QToolButton, QToolTip
+from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QToolButton, QToolTip
 
 from brando.core import inspect_docx
 from brando.gui import Window
@@ -39,19 +39,27 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
     window = Window()
     try:
         assert not window.comments.isChecked()
+        assert window.findChild(QLabel, "commentTitle").text() == "Source comments"
+        assert window.theme_toggle.accessibleName() == "Use dark mode"
+        assert any(label.text() == "Dark mode" for label in window.findChildren(QLabel))
         assert Path(window.destination.text()).name == "Brando_exports"
         information = window.findChildren(QToolButton, "optionInfo")
         assert len(information) == 9
         assert all(button.toolTip() and button.accessibleName() for button in information)
-        window.input.setText(str(EXAMPLE))
-        window.scan()
+        window.select_project(EXAMPLE)
         assert window.cancel_button.isEnabled()
         complete(app, window)
         assert window.root.currentText() == "main.tex"
         assert "Standard article" in window.detected.text()
         assert window.source_comment_count == 3
-        assert "3 percent source notes" in window.comment_status.text()
+        assert "3 source notes found" in window.comment_status.text()
         window.comments.setChecked(include_comments)
+        expected_status = (
+            "Source notes will be included as Word comments."
+            if include_comments
+            else "Enable to include source notes as Word comments."
+        )
+        assert window.comment_status.text() == "3 source notes found. " + expected_status
         window.destination.setText(str(tmp_path))
         window.start_conversion()
         assert complete(app, window) > 1
@@ -59,7 +67,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
         assert "Avery Example" in inspect_docx(window.output)["text"]
         assert inspect_docx(window.output)["native_comment_count"] == (3 if include_comments else 0)
         assert (
-            "Source comments exported: 3" if include_comments else "Source comments were OFF"
+            "Source comments exported: 3" if include_comments else "Source comments excluded"
         ) in window.log.toPlainText()
         assert window.open_word.isEnabled()
         assert (window.output.parent / "conversion-notes.txt").is_file()
@@ -120,8 +128,7 @@ def test_theme_switch_keeps_geometry_and_conversion_choices(app, tmp_path):
     window = Window()
     window.show()
     try:
-        window.input.setText(str(EXAMPLE))
-        window.scan()
+        window.select_project(EXAMPLE)
         complete(app, window)
         window.comments.setChecked(True)
         window.destination.setText(str(tmp_path))
@@ -163,8 +170,7 @@ def test_unreadable_comment_preview_keeps_project_importable(app, tmp_path):
     (tmp_path / "notes.bib").write_bytes(b"\x81")
     window = Window()
     try:
-        window.input.setText(str(tmp_path))
-        window.scan()
+        window.select_project(tmp_path)
         complete(app, window)
         assert window.project is not None
         assert window.source_comment_count is None
@@ -196,8 +202,7 @@ def test_ambiguous_root_is_not_auto_selected(app, tmp_path):
     (tmp_path / "supplement.tex").write_text(article)
     window = Window()
     try:
-        window.input.setText(str(tmp_path))
-        window.scan()
+        window.select_project(tmp_path)
         complete(app, window)
         assert window.root.currentText() == ""
         assert window.root.count() == 2
@@ -210,18 +215,19 @@ def test_focus_change_keeps_main_selection_and_reselection_refreshes(app, tmp_pa
     (tmp_path / "main.tex").write_text(original)
     (tmp_path / "supplement.tex").write_text(original)
     window = Window()
+    window.show()
     try:
-        window.input.setText(str(tmp_path))
-        window.scan()
+        window.select_project(tmp_path)
         complete(app, window)
         window.root.setCurrentText("supplement.tex")
-        window.input.editingFinished.emit()
+        window.destination.setFocus()
+        QTest.qWait(20)
         assert window.task is None
         assert window.root.currentText() == "supplement.tex"
 
         updated = original.replace("Original", "Updated")
         (tmp_path / "main.tex").write_text(updated)
-        window.scan(force=True)
+        window.select_project(tmp_path)
         complete(app, window)
         assert window.project.files["main.tex"].decode() == updated
         assert window.root.currentText() == ""
@@ -237,7 +243,7 @@ def test_information_tips_wrap_and_stay_anchored(app, dark):
     try:
         assert window.findChild(QLabel, "brandTitle").text() == "Brando"
         buttons = window.findChildren(QToolButton, "optionInfo")
-        comments = next(b for b in buttons if b.accessibleName() == "About include source comments")
+        comments = next(b for b in buttons if b.accessibleName() == "About source comments")
         QTest.mouseMove(comments, QPoint(4, 4))
         QTest.qWait(300)
         assert QToolTip.isVisible()
@@ -268,23 +274,17 @@ def test_information_tips_wrap_and_stay_anchored(app, dark):
         window.close()
 
 
-def test_project_path_requires_enter_and_details_explain_saved_files(app):
+def test_project_selection_shows_name_and_details_explain_saved_files(app):
     window = Window()
     window.show()
     try:
         assert not window.details_button.isEnabled()
         assert not window.details_panel.isVisible()
-        assert "press Enter" in window.input.placeholderText()
-        window.input.setFocus()
-        QTest.keyClicks(window.input, str(EXAMPLE))
-        window.root.setFocus()
-        QTest.qWait(30)
-        assert window.task is None
-        assert window.project is None
-        window.input.setFocus()
-        QTest.keyClick(window.input, Qt.Key.Key_Return)
+        assert window.drop_area.findChildren(QLineEdit) == []
+        window.select_project(EXAMPLE)
         complete(app, window)
         assert window.project is not None
+        assert EXAMPLE.name in window.drop_area.summary.text()
         assert window.convert_button.isEnabled()
         assert window.details_button.isEnabled()
         window.details_button.click()
@@ -294,12 +294,6 @@ def test_project_path_requires_enter_and_details_explain_saved_files(app):
         assert "separate from Word comments" in hint
         assert window.log.isReadOnly()
 
-        # Editing a draft path cannot convert the previously captured project by mistake.
-        window.input.setFocus()
-        QTest.keyClicks(window.input, "-not-loaded")
-        assert not window.convert_button.isEnabled()
-        window.start_conversion()
-        assert window.task is None
         window.log.clear()
         assert not window.details_button.isEnabled()
         assert not window.details_panel.isVisible()

@@ -14,7 +14,7 @@ from brando.gui import Window
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--dark", action="store_true", help="Capture Deep Tide colors")
+parser.add_argument("--dark", action="store_true", help="Capture dark mode")
 args = parser.parse_args()
 os.chdir(ROOT)
 app = QApplication([])
@@ -27,10 +27,9 @@ if os.name == "nt":
     app.setFont(QFont("Segoe UI", 10))
 window = Window()
 window.theme_toggle.setChecked(args.dark)
-window.input.setText("examples/article")
 window.destination.setText("outputs")
 window.show()
-window.scan()
+window.select_project("examples/article")
 deadline = time.monotonic() + 20
 while window.task and time.monotonic() < deadline:
     app.processEvents()

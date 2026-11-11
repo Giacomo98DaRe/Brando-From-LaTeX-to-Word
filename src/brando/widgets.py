@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     QToolButton,
     QToolTip,
@@ -158,17 +157,6 @@ class DropArea(QFrame):
         buttons.addStretch()
         layout.addLayout(buttons)
         layout.addStretch()
-        path_label = QLabel("Project path (optional)")
-        path_label.setProperty("secondary", True)
-        layout.addWidget(path_label)
-        self.input = QLineEdit()
-        self.input.setPlaceholderText("Paste a ZIP or folder path, then press Enter")
-        self.input.setAccessibleName("Project path")
-        self.input.setAccessibleDescription(
-            "Optional. Paste a project path and press Enter to load."
-        )
-        path_label.setBuddy(self.input)
-        layout.addWidget(self.input)
         self.summary = QLabel("Conversion stays on this computer.")
         self.summary.setProperty("secondary", True)
         self.summary.setWordWrap(True)
