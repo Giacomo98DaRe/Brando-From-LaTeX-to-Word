@@ -6,6 +6,7 @@ from string import Template
 from PySide6.QtGui import QColor, QIcon, QPalette
 from PySide6.QtWidgets import QToolTip, QWidget
 
+from .desktop import set_titlebar_theme
 from .widgets import Switch
 
 RESOURCES = Path(__file__).with_name("resources")
@@ -85,3 +86,4 @@ def apply_theme(window: QWidget, dark: bool) -> None:
     # Styled buttons can retain the platform highlight unless their palette is explicit.
     for switch in window.findChildren(Switch):
         switch.setPalette(palette)
+    set_titlebar_theme(int(window.winId()), dark)

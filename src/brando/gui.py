@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import threading
 from pathlib import Path
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
 
 from .appearance import application_icon, apply_theme
 from .core import TEMPLATES, Options, convert, detect_template
+from .desktop import set_process_identity
 from .project import Cancelled, Project, capture, decode, source_notes
 from .widgets import DropArea, Switch, dropped_project, option_label
 
@@ -570,12 +572,43 @@ class Window(QMainWindow):
             event.accept()
 
 
+def _smoke_ui(app: QApplication, window: Window) -> None:
+    """Exercise the frozen desktop using the same switch as an interactive user."""
+    output = os.environ.get("BRANDO_UI_SMOKE_DIR")
+    folder = Path(output) if output else None
+    try:
+        if folder:
+            folder.mkdir(parents=True, exist_ok=True)
+        assert not window.windowIcon().pixmap(32, 32).isNull()
+        assert not app.windowIcon().pixmap(32, 32).isNull()
+        controls = (window.drop_area, window.root, window.comments, window.convert_button)
+        geometry = [widget.geometry() for widget in controls]
+        states = {}
+        for dark, name in ((True, "deep-tide"), (False, "lagoon")):
+            window.theme_toggle.setChecked(dark)
+            app.processEvents()
+            assert [widget.geometry() for widget in controls] == geometry
+            states[name] = window.palette().window().color().name()
+            if folder:
+                assert window.grab().save(str(folder / f"{name}.png"))
+        assert states == {"deep-tide": "#0a1923", "lagoon": "#f3f7f8"}
+        if folder:
+            (folder / "result.json").write_text(json.dumps(states), encoding="utf-8")
+        app.quit()
+    except Exception as exc:
+        if folder:
+            (folder / "error.txt").write_text(str(exc), encoding="utf-8")
+        app.exit(1)
+
+
 def main() -> int:
+    set_process_identity()
     app = QApplication(sys.argv)
     app.setApplicationName("Brando")
     app.setOrganizationName("Brando")
+    app.setWindowIcon(application_icon())
     window = Window()
     window.show()
     if "--ui-smoke" in sys.argv:
-        QTimer.singleShot(300, app.quit)
+        QTimer.singleShot(300, lambda: _smoke_ui(app, window))
     return app.exec()

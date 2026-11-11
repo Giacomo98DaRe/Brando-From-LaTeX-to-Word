@@ -41,11 +41,17 @@ def main():
         subprocess.run(
             [str(executable), "--ui-smoke"],
             cwd=work,
-            env={**environment, "QT_QPA_PLATFORM": "offscreen"},
+            env={
+                **environment,
+                "QT_QPA_PLATFORM": "offscreen",
+                "BRANDO_UI_SMOKE_DIR": str(work / "ui"),
+            },
             capture_output=True,
             timeout=20,
             check=True,
         )
+        themes = json.loads((work / "ui/result.json").read_text(encoding="utf-8"))
+        assert themes == {"deep-tide": "#0a1923", "lagoon": "#f3f7f8"}
         # Test ZIP import through an enclosing directory without altering synthetic sources.
         archive = work / "Project with spaces é.zip"
         figure = BytesIO()

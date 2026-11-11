@@ -93,6 +93,8 @@ def main():
         "tex2word",
         "--collect-data",
         "latex2mathml",
+        "--collect-data",
+        "brando",
         "--copy-metadata",
         "tex2word",
         "--copy-metadata",
@@ -103,8 +105,12 @@ def main():
         str(ROOT / "build/pyinstaller"),
         "--specpath",
         str(ROOT / "build"),
-        str(ROOT / "scripts/desktop_entry.py"),
     ]
+    if sys.platform in {"win32", "darwin"}:
+        extension = "ico" if sys.platform == "win32" else "png"
+        icon = ROOT / "src/brando/resources" / f"brando.{extension}"
+        command.extend(["--icon", str(icon)])
+    command.append(str(ROOT / "scripts/desktop_entry.py"))
     build_env = dict(os.environ)
     cache = (ROOT / ".tools/pyinstaller-cache").resolve()
     if not cache.is_relative_to(ROOT):
