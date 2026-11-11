@@ -7,7 +7,7 @@ import sys
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QStandardPaths, QThread, QTimer, QUrl, Signal
+from PySide6.QtCore import QPoint, QStandardPaths, Qt, QThread, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -23,12 +23,14 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
+    QToolButton,
+    QToolTip,
     QVBoxLayout,
     QWidget,
 )
 
 from .core import TEMPLATES, Options, convert, detect_template
-from .project import Cancelled, Project, capture, decode
+from .project import Cancelled, Project, capture, decode, source_notes
 
 
 def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
@@ -37,6 +39,28 @@ def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
     for button in buttons:
         row.addWidget(button)
     return row
+
+
+def _option_label(text: str, explanation: str) -> QWidget:
+    label = QWidget()
+    row = QHBoxLayout(label)
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(5)
+    row.addWidget(QLabel(text))
+    info = QToolButton()
+    info.setObjectName("optionInfo")
+    info.setText("i")
+    info.setAutoRaise(True)
+    info.setFixedSize(22, 22)
+    info.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+    info.setAccessibleName(f"About {text.lower()}")
+    info.setToolTip(explanation)
+    info.clicked.connect(
+        lambda: QToolTip.showText(info.mapToGlobal(QPoint(0, info.height())), explanation, info)
+    )
+    row.addWidget(info)
+    row.addStretch()
+    return label
 
 
 class Task(QThread):
@@ -66,6 +90,7 @@ class Window(QMainWindow):
         self.setAcceptDrops(True)
         self.project: Project | None = None
         self.project_path: Path | None = None
+        self.source_comment_count: int | None = None
         self.task: Task | None = None
         self.output: Path | None = None
         body = QWidget()
@@ -92,14 +117,31 @@ class Window(QMainWindow):
         self.folder_button = QPushButton("Folder…")
         self.zip_button.clicked.connect(self.choose_zip)
         self.folder_button.clicked.connect(self.choose_folder)
-        form.addRow("Project", _file_row(self.input, self.zip_button, self.folder_button))
+        form.addRow(
+            _option_label("Project", "Choose an Overleaf source ZIP or a project folder."),
+            _file_row(self.input, self.zip_button, self.folder_button),
+        )
         self.root = QComboBox()
         self.root.setEditable(True)
         self.root.currentTextChanged.connect(self.update_template)
-        form.addRow("Main document", self.root)
+        form.addRow(
+            _option_label(
+                "Main document",
+                "Choose the .tex file that starts the manuscript. Convert supplements separately.",
+            ),
+            self.root,
+        )
         self.template = QComboBox()
         self.template.addItems(TEMPLATES)
-        form.addRow("Source template", self.template)
+        form.addRow(
+            _option_label(
+                "Source template",
+                "Auto uses the LaTeX document class. "
+                "Overrides change how the source is interpreted. "
+                "All template families are experimental.",
+            ),
+            self.template,
+        )
         self.detected = QLabel(
             "Template support is experimental. Choose a main document to see detection."
         )
@@ -108,26 +150,63 @@ class Window(QMainWindow):
         self.layout_choice = QComboBox()
         self.layout_choice.addItems(["Readable review", "Reference DOCX"])
         self.layout_choice.currentIndexChanged.connect(self.layout_changed)
-        form.addRow("Word layout", self.layout_choice)
+        form.addRow(
+            _option_label(
+                "Word layout",
+                "Readable review uses a single-column Word layout. Reference DOCX uses styles "
+                "and page settings from a Word file you choose.",
+            ),
+            self.layout_choice,
+        )
         self.reference = QLineEdit()
         self.reference.setPlaceholderText("Select a reference Word file")
         self.reference_button = QPushButton("Browse…")
         self.reference_button.clicked.connect(self.choose_reference)
-        form.addRow("Reference", _file_row(self.reference, self.reference_button))
+        form.addRow(
+            _option_label(
+                "Reference", "Choose a DOCX whose styles and page settings will be used."
+            ),
+            _file_row(self.reference, self.reference_button),
+        )
         self.comments = QCheckBox("Include source comments")
         self.comments.setToolTip(
             "Native Word comments in a source-location appendix. "
             "Includes unused .tex/.bib files. Overleaf Review discussions are not included."
         )
-        form.addRow("", self.comments)
+        self.comment_status = QLabel()
+        self.comment_status.setWordWrap(True)
+        self.comments.toggled.connect(self.update_comment_status)
+        comment_options = QWidget()
+        comment_layout = QVBoxLayout(comment_options)
+        comment_layout.setContentsMargins(0, 0, 0, 0)
+        comment_layout.addWidget(self.comments)
+        comment_layout.addWidget(self.comment_status)
+        form.addRow(
+            _option_label(
+                "Source comments",
+                "Opt in to native Word comments. Percent notes from captured .tex/.bib files "
+                "use appendix anchors, including unused files. Supported inline annotations "
+                "keep engine anchors. Overleaf Review discussions require a separate source. "
+                "Track Changes is a separate Word feature.",
+            ),
+            comment_options,
+        )
+        self.update_comment_status()
         self.destination = QLineEdit()
         documents = QStandardPaths.writableLocation(
             QStandardPaths.StandardLocation.DocumentsLocation
         )
-        self.destination.setText(str(Path(documents) / "Brando exports"))
+        self.destination.setText(str(Path(documents) / "Brando_exports"))
         self.destination_button = QPushButton("Browse…")
         self.destination_button.clicked.connect(self.choose_destination)
-        form.addRow("Destination", _file_row(self.destination, self.destination_button))
+        form.addRow(
+            _option_label(
+                "Destination",
+                "Choose where to save the Word document and conversion notes. "
+                "Each conversion creates a new export folder.",
+            ),
+            _file_row(self.destination, self.destination_button),
+        )
         layout.addLayout(form)
         self.convert_button = QPushButton("Convert to Word")
         self.convert_button.setMinimumHeight(40)
@@ -199,6 +278,17 @@ class Window(QMainWindow):
         self.reference.setEnabled(enabled)
         self.reference_button.setEnabled(enabled)
 
+    def update_comment_status(self):
+        count = self.source_comment_count
+        detected = f"{count} percent source notes detected. " if count is not None else ""
+        if self.comments.isChecked():
+            self.comment_status.setText(
+                detected + "Enabled. Percent notes use appendix anchors. "
+                "Supported inline annotations keep engine anchors."
+            )
+        else:
+            self.comment_status.setText(detected + "Off. Source comments will be omitted.")
+
     def set_busy(self, busy):
         for widget in (
             self.input,
@@ -253,13 +343,27 @@ class Window(QMainWindow):
             return
         self.project = None
         self.project_path = None
+        self.source_comment_count = None
+        self.update_comment_status()
         self.root.clear()
         self.log.clear()
         self.log.appendPlainText("Reading the project…")
-        self.run_task(lambda cancel, progress: (path, capture(path, cancel)), self.scanned)
+
+        def read_project(cancel, progress):
+            project = capture(path, cancel)
+            try:
+                notes, _ = source_notes(project)
+                count = len(notes)
+            except UnicodeDecodeError:
+                # Optional comment preview must not block an otherwise valid import.
+                count = None
+            return path, project, count
+
+        self.run_task(read_project, self.scanned)
 
     def scanned(self, value):
-        self.project_path, self.project = value
+        self.project_path, self.project, self.source_comment_count = value
+        self.update_comment_status()
         candidates = self.project.candidates()
         self.root.blockSignals(True)
         self.root.clear()
@@ -321,6 +425,14 @@ class Window(QMainWindow):
         self.output = path
         report = json.loads((path.parent / "conversion-report.json").read_text(encoding="utf-8"))
         self.log.appendPlainText(f"Saved: {path}")
+        if report["source_comments_enabled"]:
+            self.log.appendPlainText(
+                f"Source comments exported: {report['source_comments_exported']} "
+                f"({report['appendix_source_comments']} appendix, "
+                f"{report['inline_engine_comments']} inline)."
+            )
+        else:
+            self.log.appendPlainText("Source comments were OFF for this export.")
         for warning in report["warnings"]:
             self.log.appendPlainText("• " + warning)
         self.log.appendPlainText(
