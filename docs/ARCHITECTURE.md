@@ -16,6 +16,12 @@
 - `word.py` owns DOCX inspection, review formatting and native source-comment handling.
 - `gui.py`: PySide6 Widgets controls, background tasks, local drag/drop and output opening.
   Import and conversion never block the UI thread. Word is opened only on user action.
+- `widgets.py` provides the large project drop target, keyboard-operable switches and option
+  information controls. `appearance.py` applies Lagoon or Deep Tide to the same widget tree.
+  The theme choice is local to the window session. Compact windows scroll the content while
+  conversion actions remain available.
+- `desktop.py` isolates Windows application identity and per-window native title-bar colors.
+  The approved Bridge icon and stylesheet are packaged under `brando/resources`.
 - `cli.py`: development/automation adapter to the same core.
 - `__main__.py` dispatches GUI, CLI and isolated-worker modes. The frozen build uses this
   same entry point through a minimal wrapper.

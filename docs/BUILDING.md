@@ -43,6 +43,9 @@ On Windows the builder also isolates PATH to the project Python runtime and Wind
 directories. This prevents DLLs from unrelated development tools entering dependency analysis.
 Engine resources are collected as data. PDFium uses the installed PyInstaller hooks for its
 shared library and version data, with PDF rasterization exercised by the packaged smoke check.
+Brando's selected Bridge artwork and desktop stylesheet are package data. Windows executable
+resources use the same multi-resolution ICO as Qt. The macOS recipe uses its PNG input.
+The relocated UI check switches both color palettes and verifies their shared layout and icons.
 PyInstaller uses a clean analysis and a workspace-local cache on every build.
 
 ## Before declaring a Windows release usable

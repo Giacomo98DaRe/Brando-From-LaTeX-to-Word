@@ -4,7 +4,7 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 43 passing tests on the Windows host.
+- Full synthetic regression suite completed with 46 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
@@ -14,6 +14,14 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
   the captured project. GUI regressions cover comments on/off, adjacent option information,
   the underscore export directory and an unreadable optional comment preview.
   The maintained screenshot shows the current interface.
+- The selected Lagoon desktop has a large drop target and prominent source-comment switch.
+  Deep Tide changes colors in place. Keyboard theme activation preserves widget geometry,
+  captured input and conversion choices, including during conversion. ZIP and folder drop
+  events are delivered through Qt to the large target. Compact-window captures verify scrolling
+  with conversion actions available. The approved Bridge icon is used by the window.
+- A hidden native Windows window verified `Brando.Desktop` application identity, a native icon
+  handle and DWM title-bar color state for both palettes. The packaged UI check exercises the
+  same theme switch and checks application/window icons before conversion tests.
 - Five template families retain independently specified synthetic title, author, affiliation
   (where supplied), abstract, keywords and body expectations.
 - Synthetic end-to-end checks exercise nested relative inputs, spaces/Unicode paths, original

@@ -20,7 +20,7 @@ been published. See [build and validation instructions](docs/BUILDING.md).
    separately; independently compilable `subfiles` chapters are not automatically roots.
 3. Leave source template on **Auto**, or override it. Choose readable review styling or a
    reference DOCX. Source recognition and Word styling are separate choices.
-4. Optionally check **Include source comments**; it starts unchecked.
+4. Optionally turn on **Include source comments**. It starts off.
    Each option has an adjacent information button. The interface shows detected note counts
    and whether comments will be exported. The default destination is `Documents/Brando_exports`.
 5. Choose an output folder outside the source folder, then select **Convert to Word**.
@@ -31,7 +31,14 @@ Each export has a fresh timestamped folder containing `manuscript.docx`,
 unchanged. The report records input/output hashes, engine diagnostics, math coverage,
 independent source observations and actual comment coverage.
 
-![Desktop prototype](docs/images/desktop.png)
+The Lagoon interface starts with a large project drop area and a dedicated source-comment
+control. The small **Deep Tide** slide in the header changes the color palette while preserving
+the layout and conversion choices. Each new window starts in Lagoon. Information buttons
+beside the options explain their effects. Conversion notes expand when needed.
+
+![Lagoon desktop](docs/images/desktop.png)
+
+![The same desktop with Deep Tide colors](docs/images/desktop-dark.png)
 
 ## Compatibility targets
 
