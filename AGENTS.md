@@ -57,6 +57,8 @@ Communicate with Giacomo in concise Italian. Keep code, documentation and report
   explain non-obvious constraints in comments. Preserve independent validation checks.
 - Format maintained Python with the pinned development-only Ruff configuration. Keep
   third-party sources, license texts and local research inputs outside formatting changes.
+- Keep design explorations, proposal galleries and rendering utilities in ignored local
+  directories. Promote only selected production assets to versioned resources after selection.
 
 ## Verification and commands
 

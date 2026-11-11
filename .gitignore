@@ -6,6 +6,8 @@
 /local-projects/
 /private/
 /downloads/
+# Local visual exploration and unapproved design proposals.
+/design/
 
 # Workspace-local toolchains and Python environments.
 /.tools/
