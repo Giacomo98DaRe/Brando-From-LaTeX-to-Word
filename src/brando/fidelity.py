@@ -45,13 +45,17 @@ def commands(text: str, name: str) -> list[str]:
     return values
 
 
-def source_text(project: Project, main: str) -> tuple[str, list[str]]:
+def source_text(
+    project: Project, main: str, included: set[str] | None = None
+) -> tuple[str, list[str]]:
     unresolved: list[str] = []
 
     def expand(name: str, stack: tuple[str, ...]) -> str:
         if name in stack or len(stack) > 40:
             unresolved.append(f"Cyclic or excessive include depth: {name}")
             return ""
+        if included is not None:
+            included.add(name)
         text = strip_comments(decode(project.files[name])[0])
         text = re.sub(
             r"\\begin\{(verbatim\*?|lstlisting|minted)\}.*?\\end\{\1\}", "", text, flags=re.S

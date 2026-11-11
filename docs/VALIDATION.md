@@ -1,17 +1,19 @@
 # Validation record
 
-Date: 2026-11-09. Development host: Windows x86-64, CPython 3.12.16.
+Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 39 passing tests on the Windows host.
+- Full synthetic regression suite completed with 43 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
   Additional regressions cover Springer contribution notes/bottom rules, protected literal
   examples, adaptation reporting, source preservation and Unicode review-list fonts.
   Focus changes retain a manually selected main document; explicit reselection refreshes
-  the captured project. The source UI screenshot matches the pre-cleanup image byte-for-byte.
+  the captured project. GUI regressions cover comments on/off, adjacent option information,
+  the underscore export directory and an unreadable optional comment preview.
+  The maintained screenshot shows the current interface.
 - Five template families retain independently specified synthetic title, author, affiliation
   (where supplied), abstract, keywords and body expectations.
 - Synthetic end-to-end checks exercise nested relative inputs, spaces/Unicode paths, original
@@ -54,6 +56,19 @@ produce conversion notes. Complete page-by-page source equivalence and editing a
 remain outstanding.
 
 ## Packaging findings
+
+The 2026-11-11 comment follow-up compares an explicitly supplied private manuscript locally.
+The supplied Brando DOCX has zero comments. A separate same-project export with comments
+enabled has 51 percent notes, previously all in an appendix. The original script's review
+document has 34 comments and Track Changes enabled. These are distinct Word features.
+
+Brando now places source notes beside uniquely matching nearby manuscript text. In a fresh
+review export, 34 of the 51 notes match body paragraphs and 17 use the final Source annotations
+section. Matching excludes unused source files and ambiguous repeated text. Regressions check
+actual Word comment ranges for body text, headings and captions, plus explicit fallback cases.
+Word 16.0 build 16.0.14334 recognized all 51 comments and two tables, and exported 12 PDF pages
+with markup. Pages 1 and 3 were inspected for visible note balloons and paragraph anchors.
+All original DOCX files and the new review export retained their recorded hashes.
 
 The first Windows package conversion exposed an audit-hook interaction with PyInstaller lazy
 imports. The hook now permits reads of the exact executable archive and workers persist

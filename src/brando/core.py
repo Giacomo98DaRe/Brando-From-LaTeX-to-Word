@@ -170,7 +170,9 @@ def convert(
                 + str(independent["missing_numeric_tables"])
                 + ". The export was not published; simplify or review these tables."
             )
-        finish_docx(output, not reference, notes, options.comments)
+        anchors = finish_docx(output, not reference, notes, options.comments, project, main)
+        body_notes = sum(anchor["anchor"] == "body" for anchor in anchors)
+        appendix_notes = len(anchors) - body_notes
         facts = inspect_docx(output)
         engine = json.loads((work / "engine-report.json").read_text(encoding="utf-8"))
         warnings = [e["message"] for e in engine["entries"] if e["severity"] != "info"]
@@ -206,10 +208,12 @@ def convert(
             "layout": "reference DOCX" if reference else "review",
             "source_comments_enabled": options.comments,
             "source_comments_exported": facts["native_comment_count"],
-            "appendix_source_comments": len(notes),
+            "body_source_comments": body_notes,
+            "appendix_source_comments": appendix_notes,
             "inline_engine_comments": facts["native_comment_count"] - len(notes),
             "comment_coverage": (
-                "Percent notes from captured tex/bib files use source-location appendix anchors. "
+                "Percent notes use unique nearby source-text matches in the manuscript. "
+                "Unmatched or unused-file notes use source-location appendix anchors. "
                 "Supported inline todo/comment/note macros use engine anchors. "
                 "Literal environments are excluded. Overleaf Review discussions "
                 "require a separate data source."
@@ -227,6 +231,7 @@ def convert(
                 "Full source-content fidelity and rendering require review."
             ),
             "source_notes": notes,
+            "source_comment_anchors": anchors,
         }
         checkpoint(cancel)
         # A fresh directory avoids silently overwriting a reviewer's earlier export.
@@ -238,7 +243,8 @@ def convert(
             "Template support: experimental; review the Word document before sharing.",
             "Full content completeness and visual rendering have not been certified.",
             f"Native source comments exported: {facts['native_comment_count']}.",
-            f"Source-location appendix comments: {len(notes)}.",
+            f"Source comments beside manuscript text: {body_notes}.",
+            f"Source-location appendix comments: {appendix_notes}.",
             "",
             *warnings,
         ]

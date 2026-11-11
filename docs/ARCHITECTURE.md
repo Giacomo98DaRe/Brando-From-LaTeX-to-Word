@@ -37,12 +37,15 @@ observing cancellation. No destination export folder is created until processing
 The complete export is staged inside the destination and published by a directory rename.
 A failed report or document write cleans up the staging directory before returning the error.
 
-Percent source comments are attached to source-location appendix entries. This avoids
-inserting parsing markers into arbitrary TeX syntax or claiming unverified manuscript anchors.
-The opt-in appendix covers every captured `.tex`/`.bib` file, not only the selected document.
+`annotations.py` places percent source notes beside unique nearby source text in Word.
+It uses static include traversal and normalized text from adjacent source lines, with separate
+handling of headings and captions. Ambiguous text, unused files and unresolved source locations
+use a final source-location appendix. Reports record each actual Word comment ID and anchor.
+The opt-in collection covers every captured `.tex`/`.bib` file.
 Supported inline `todo`, `comment` and `note` macros retain engine-provided manuscript anchors
 when enabled. The checkbox also removes those annotations when disabled. Reports distinguish
-appendix and inline comment counts.
+matched body, appendix and engine-inline comment counts. Text matching is conservative and
+requires review for macro-heavy sources. No parsing markers are inserted into the source.
 
 Future work should extend fidelity observations and adapters based on observed regressions,
 then tighten supported-template status. Optional generated-figure compilation needs a separate

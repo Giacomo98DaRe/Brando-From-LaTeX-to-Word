@@ -21,6 +21,8 @@ been published. See [build and validation instructions](docs/BUILDING.md).
 3. Leave source template on **Auto**, or override it. Choose readable review styling or a
    reference DOCX. Source recognition and Word styling are separate choices.
 4. Optionally check **Include source comments**; it starts unchecked.
+   Each option has an adjacent information button. The interface shows detected note counts
+   and whether comments will be exported. The default destination is `Documents/Brando_exports`.
 5. Choose an output folder outside the source folder, then select **Convert to Word**.
 6. Read the conversion notes and inspect the Word file before sharing it.
 
@@ -54,8 +56,9 @@ does not certify manuscript completeness.
   PDF is required or generated. Unsupported figures and image fallback appear in the notes.
 - PDF figures can become PNG images; EPS figures need separate preparation. Equations use
   native Office Math where supported; raw fallbacks are reported. Review every equation.
-- Percent source comments become **native Word comments in a source-location appendix**, including
-  unused `.tex`/`.bib` files. They are not anchored to inferred manuscript positions. Comments
+- Percent source comments become **native Word comments beside unique matching manuscript text**.
+  Unmatched notes and notes from unused `.tex`/`.bib` files use a final **Source annotations**
+  appendix. The report records actual body/appendix placement and Word comment IDs. Comments
   inside literal environments are excluded. Supported inline `todo`, `comment` and `note`
   annotations use the engine's manuscript anchors. The checkbox controls both kinds. Coverage
   and counts appear in the report. Overleaf Review discussions require a separate data source.

@@ -170,8 +170,8 @@ class Window(QMainWindow):
         )
         self.comments = QCheckBox("Include source comments")
         self.comments.setToolTip(
-            "Native Word comments in a source-location appendix. "
-            "Includes unused .tex/.bib files. Overleaf Review discussions are not included."
+            "Native Word comments beside matching manuscript paragraphs. "
+            "Unmatched notes use a source-location appendix. Includes unused .tex/.bib files."
         )
         self.comment_status = QLabel()
         self.comment_status.setWordWrap(True)
@@ -185,7 +185,8 @@ class Window(QMainWindow):
             _option_label(
                 "Source comments",
                 "Opt in to native Word comments. Percent notes from captured .tex/.bib files "
-                "use appendix anchors, including unused files. Supported inline annotations "
+                "use matching manuscript paragraphs, with an appendix for unmatched notes "
+                "and unused files. Supported inline annotations "
                 "keep engine anchors. Overleaf Review discussions require a separate source. "
                 "Track Changes is a separate Word feature.",
             ),
@@ -283,7 +284,8 @@ class Window(QMainWindow):
         detected = f"{count} percent source notes detected. " if count is not None else ""
         if self.comments.isChecked():
             self.comment_status.setText(
-                detected + "Enabled. Percent notes use appendix anchors. "
+                detected + "Enabled. Matching notes appear beside manuscript text. "
+                "Unmatched notes use the final Source annotations section. "
                 "Supported inline annotations keep engine anchors."
             )
         else:
@@ -428,7 +430,8 @@ class Window(QMainWindow):
         if report["source_comments_enabled"]:
             self.log.appendPlainText(
                 f"Source comments exported: {report['source_comments_exported']} "
-                f"({report['appendix_source_comments']} appendix, "
+                f"({report.get('body_source_comments', 0)} beside text, "
+                f"{report['appendix_source_comments']} appendix, "
                 f"{report['inline_engine_comments']} inline)."
             )
         else:

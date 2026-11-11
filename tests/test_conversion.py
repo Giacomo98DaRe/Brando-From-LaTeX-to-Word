@@ -61,7 +61,7 @@ def test_example_preserves_content_numbers_math_citation_and_inputs(tmp_path):
     assert report["source_template"] == "Standard article"
 
 
-def test_comments_are_opt_in_native_and_anchored_in_appendix(tmp_path):
+def test_source_comments_use_manuscript_text_and_unmatched_appendix(tmp_path):
     result = convert(EXAMPLE, tmp_path, Options(comments=True))
     with ZipFile(result) as z:
         comments = ET.fromstring(z.read("word/comments.xml"))
@@ -69,7 +69,75 @@ def test_comments_are_opt_in_native_and_anchored_in_appendix(tmp_path):
         assert len(comments.findall(f"{{{W}}}comment")) == 3
         assert len(list(doc.iter(f"{{{W}}}commentRangeStart"))) == 3
         assert "Check this sentence" in "".join(comments.itertext())
+        comment = next(c for c in comments if "Check this sentence" in "".join(c.itertext()))
+        comment_id = comment.get(f"{{{W}}}id")
+        paragraph = next(
+            p
+            for p in doc.iter(f"{{{W}}}p")
+            if any(e.get(f"{{{W}}}id") == comment_id for e in p.iter(f"{{{W}}}commentRangeStart"))
+        )
+        assert "This included section must survive conversion." in "".join(paragraph.itertext())
     assert "Source annotations" in inspect_docx(result)["text"]
+    report = json.loads((result.parent / "conversion-report.json").read_text())
+    assert report["body_source_comments"] >= 1
+    assert report["appendix_source_comments"] >= 1
+    assert report["body_source_comments"] + report["appendix_source_comments"] == 3
+
+
+def test_ambiguous_and_unused_source_notes_never_attach_to_matching_body(tmp_path):
+    repeated = "Repeated context appears identically in two manuscript paragraphs."
+    unique = "A uniquely identifiable manuscript sentence has its own source annotation."
+    source = project(
+        tmp_path,
+        "\\documentclass{article}\\begin{document}\n"
+        + unique
+        + " % Unique body note\n\n"
+        + repeated
+        + " % Ambiguous repeated note\n\n"
+        + repeated
+        + "\n\\end{document}",
+    )
+    (source / "unused.tex").write_text(unique + " % Unused source note")
+    (source / "refs.bib").write_text("% Bibliography source note")
+    result = convert(source, tmp_path / "out", Options(comments=True))
+    report = json.loads((result.parent / "conversion-report.json").read_text())
+    assert report["source_comments_exported"] == 4
+    assert report["body_source_comments"] == 1
+    assert report["appendix_source_comments"] == 3
+    anchors = report["source_comment_anchors"]
+    assert next(a for a in anchors if a["file"] == "unused.tex")["anchor"] == "appendix"
+    assert next(a for a in anchors if a["file"] == "refs.bib")["anchor"] == "appendix"
+
+
+def test_source_notes_before_heading_and_caption_use_their_word_paragraphs(tmp_path):
+    source = project(
+        tmp_path,
+        "\\documentclass{article}\\begin{document}\n"
+        "% Heading review\n\\section{Distinct methods section}\nBody sentinel.\n\n"
+        "% Caption review\n\\begin{table}\n"
+        "\\caption{An original synthetic caption with an identifiable review target}\n"
+        "\\begin{tabular}{ll}Measure & Value\\\\\\end{tabular}\n"
+        "\\end{table}\\end{document}",
+    )
+    result = convert(source, tmp_path / "out", Options(comments=True))
+    with ZipFile(result) as archive:
+        document = ET.fromstring(archive.read("word/document.xml"))
+        comments = ET.fromstring(archive.read("word/comments.xml"))
+        for note, expected in (
+            ("Heading review", "Distinct methods section"),
+            ("Caption review", "An original synthetic caption"),
+        ):
+            comment_id = next(
+                c.get(f"{{{W}}}id") for c in comments if note in "".join(c.itertext())
+            )
+            paragraph = next(
+                p
+                for p in document.iter(f"{{{W}}}p")
+                if any(
+                    e.get(f"{{{W}}}id") == comment_id for e in p.iter(f"{{{W}}}commentRangeStart")
+                )
+            )
+            assert expected in "".join(paragraph.itertext())
 
 
 def test_ambiguous_main_requires_selection_and_supplement_is_separate(tmp_path):

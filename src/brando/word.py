@@ -4,7 +4,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
-from .project import ConversionError
+from .project import ConversionError, Project
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
@@ -38,12 +38,21 @@ def inspect_docx(path: Path) -> dict:
         }
 
 
-def finish_docx(path: Path, review: bool, notes: list[dict], include_comments: bool) -> None:
+def finish_docx(
+    path: Path,
+    review: bool,
+    notes: list[dict],
+    include_comments: bool,
+    project: Project | None = None,
+    main: str | None = None,
+) -> list[dict]:
     """Apply review styling and the source-comment choice to a generated Word file."""
     from docx import Document
     from docx.opc.constants import RELATIONSHIP_TYPE as RT
     from docx.shared import Inches, Pt
     from lxml import etree
+
+    from .annotations import add_source_comments
 
     doc = Document(path)
     if not include_comments:
@@ -95,16 +104,6 @@ def finish_docx(path: Path, review: bool, notes: list[dict], include_comments: b
             # Review layout is independent of the source class's column count.
             for cols in sec._sectPr.findall(f"{{{W}}}cols"):
                 cols.set(f"{{{W}}}num", "1")
-    if notes:
-        doc.add_heading("Source annotations", level=1)
-        doc.add_paragraph(
-            "Local source comments from all captured .tex and .bib files, including unused files. "
-            "Comments are attached to source-location entries below; "
-            "manuscript positions are not inferred. Overleaf Review-panel discussions "
-            "are not included. No source author or date is known."
-        )
-        for note in notes:
-            para = doc.add_paragraph()
-            run = para.add_run(f"{note['file']}:{note['line']}")
-            doc.add_comment(run, note["text"], author="Source annotation", initials="SA")
+    anchors = add_source_comments(doc, notes, project, main) if include_comments and notes else []
     doc.save(path)
+    return anchors
