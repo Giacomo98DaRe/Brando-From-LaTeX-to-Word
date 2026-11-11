@@ -45,7 +45,8 @@ Engine resources are collected as data. PDFium uses the installed PyInstaller ho
 shared library and version data, with PDF rasterization exercised by the packaged smoke check.
 Brando's selected crayon B artwork and desktop stylesheet are package data. Windows executable
 resources use the same multi-resolution ICO as Qt. The macOS recipe uses its PNG input.
-The transparent PNG is the master for the selected crayon B (concept 07); the ICO contains
+The RGBA PNG master shows the selected crayon B (concept 07) in mint on a rounded petrol tile,
+with transparent outer corners. The ICO contains
 16, 24, 32, 48, 64, 128 and 256 pixel variants. The same mark appears in the header and drop
 target. Local design sheets and extraction prompts are excluded from source and builds.
 The relocated UI check switches both color palettes and verifies their shared layout and icons.

@@ -27,11 +27,11 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
   captured input and conversion choices, including during conversion. ZIP and folder drop
   events are delivered through Qt to the large target. Compact-window captures verify scrolling
   with conversion actions available. The approved crayon B icon is used by the window.
-- The selected crayon B identity (concept 07) replaces Bridge in the header, drop target,
-  window and Windows executable. Actual Lagoon/Deep Tide screenshots and 16-256 pixel
-  icon renders were inspected. All seven EXE icon payloads match the packaged ICO exactly;
-  the transparent PNG master and four production resources match their bundled copies.
-  The full 46-test suite, Ruff checks and relocated package smoke passed after replacement.
+- The selected crayon B identity (concept 07) uses mint artwork on a rounded petrol tile
+  in the header, drop target, window and Windows executable. Actual Lagoon/Deep Tide screenshots
+  and icon renders at 16-256 pixels were inspected. All seven EXE icon payloads match the ICO
+  exactly. All four production resources match their bundled copies. The full regression suite,
+  Ruff checks and relocated package smoke passed after replacement.
 - A hidden native Windows window verified `Brando.Desktop` application identity, a native icon
   handle and DWM title-bar color state for both palettes. The packaged UI check exercises the
   same theme switch and checks application/window icons before conversion tests.
