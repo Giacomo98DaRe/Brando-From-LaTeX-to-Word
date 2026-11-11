@@ -15,7 +15,9 @@ directory together, unzip it to a writable local folder and open `Brando.exe`. E
 of this bundle do not need Python, Git, Pandoc or TeX. Public installation assets have not
 been published. See [build and validation instructions](docs/BUILDING.md).
 
-1. Select or drop an Overleaf **source ZIP** or a project folder.
+1. Select or drop an Overleaf **source ZIP** or a project folder. Alternatively, paste its
+   path in **Project path (optional)** and press **Enter** to load it. Moving focus alone
+   does not load a typed path; conversion stays disabled while a changed path is unconfirmed.
 2. Choose the main `.tex` file if there are several candidates. Convert separate supplements
    separately; independently compilable `subfiles` chapters are not automatically roots.
 3. Leave source template on **Auto**, or override it. Choose readable review styling or a
@@ -34,7 +36,13 @@ independent source observations and actual comment coverage.
 The Lagoon interface starts with a large project drop area and a dedicated source-comment
 control. The small **Deep Tide** slide in the header changes the color palette while preserving
 the layout and conversion choices. Each new window starts in Lagoon. Information buttons
-beside the options explain their effects. Conversion notes expand when needed.
+beside the options show short, wrapped help on hover or activation with the keyboard.
+**Conversion details** shows session progress, warnings and errors in a read-only panel.
+It becomes available after there is something to show, and opens automatically on errors
+or conversion warnings. The panel explains where the saved notes and report are stored.
+`conversion-notes.txt` is the readable export summary; `conversion-report.json` contains
+the full diagnostic and coverage details. Both are saved beside `manuscript.docx` in the
+new export folder. These diagnostics are separate from the source comments inside Word.
 
 ![Lagoon desktop](docs/images/desktop.png)
 

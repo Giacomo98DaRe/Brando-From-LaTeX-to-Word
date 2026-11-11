@@ -4,7 +4,7 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 46 passing tests on the Windows host.
+- Full synthetic regression suite completed with 49 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
@@ -14,6 +14,14 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
   the captured project. GUI regressions cover comments on/off, adjacent option information,
   the underscore export directory and an unreadable optional comment preview.
   The maintained screenshot shows the current interface.
+- Information controls were exercised with mouse hover, click and keyboard activation in both
+  palettes. Help stays anchored while the pointer moves within the button; actual multiline
+  rendering stays below 340 pixels wide. Eighteen rendered tips across both themes were
+  measured. The Brando wordmark uses its capital B. Manual path input loads only on Enter;
+  changing focus does not import an unfinished path, and draft edits disable stale conversion.
+  The details panel is unavailable while empty and explains progress/warnings, the saved note
+  and report filenames, and their distinction from Word comments. Compact error captures retain
+  visible conversion actions.
 - The selected Lagoon desktop has a large drop target and prominent source-comment switch.
   Deep Tide changes colors in place. Keyboard theme activation preserves widget geometry,
   captured input and conversion choices, including during conversion. ZIP and folder drop

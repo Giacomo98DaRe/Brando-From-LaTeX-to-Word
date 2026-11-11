@@ -17,7 +17,11 @@
 - `gui.py`: PySide6 Widgets controls, background tasks, local drag/drop and output opening.
   Import and conversion never block the UI thread. Word is opened only on user action.
 - `widgets.py` provides the large project drop target, keyboard-operable switches and option
-  information controls. `appearance.py` applies Lagoon or Deep Tide to the same widget tree.
+  information controls. Help wraps within a bounded tooltip, with a short hover delay and
+  stable placement beside its control; click/Space opens it and Escape dismisses it.
+  Manual project paths load on Enter, with draft edits disabling conversion of an older snapshot.
+  The read-only details panel explains session messages and their saved export counterparts.
+  `appearance.py` applies Lagoon or Deep Tide to the same widget tree.
   The theme choice is local to the window session. Compact windows scroll the content while
   conversion actions remain available.
 - `desktop.py` isolates Windows application identity and per-window native title-bar colors.

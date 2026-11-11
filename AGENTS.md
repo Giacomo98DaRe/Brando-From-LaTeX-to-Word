@@ -2,6 +2,7 @@
 
 Brando is an independent, local desktop Overleaf/LaTeX project to editable DOCX converter.
 Communicate with Giacomo in concise Italian. Keep code, documentation and reports in English.
+Spell the product name **Brando** with a capital B in user-facing text.
 
 ## Resume and working memory
 
