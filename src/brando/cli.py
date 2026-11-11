@@ -22,7 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--comments",
         action="store_true",
-        help="Export source notes as native Word comments beside matching text or in Source annotations",
+        help="Export source notes as Word comments; unmatched notes use Source annotations",
     )
     parser.add_argument("--reference", type=Path, help="Reference Word DOCX for styling")
     parser.add_argument("--timeout", type=float, default=120)

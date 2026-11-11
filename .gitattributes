@@ -4,6 +4,9 @@
 # Preserve retrieved third-party texts byte for byte for provenance hash checks.
 resources/licenses/* -text
 resources/licenses/SOURCES.json text eol=lf
+resources/licenses/QT_SOURCES.json text eol=lf
+# Preserve upstream notice whitespace, including license text trailing spaces.
+resources/licenses/Qt-6.10.1-NOTICES.txt -whitespace
 
 # Binary fixtures and visual assets must never undergo text conversion.
 *.png binary
