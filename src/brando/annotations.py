@@ -91,12 +91,20 @@ def add_source_comments(
                         # A long, consecutive phrase tolerates citation/style differences
                         # elsewhere in the paragraph. Repeated matches remain ambiguous.
                         phrase = words[:8]
-                        contained = len(phrase) >= 6 and any(
-                            output[start : start + len(phrase)] == phrase
-                            for start in range(len(output) - len(phrase) + 1)
+                        occurrences = (
+                            sum(
+                                output[start : start + len(phrase)] == phrase
+                                for start in range(len(output) - len(phrase) + 1)
+                            )
+                            if len(phrase) >= 6
+                            else 0
                         )
-                        if (exact or contained) and any(run.text for run in paragraphs[index].runs):
-                            matches.append(index)
+                        if (exact or occurrences) and any(
+                            run.text for run in paragraphs[index].runs
+                        ):
+                            # Engines can merge source paragraphs. Repeated context in
+                            # one Word paragraph is just as ambiguous as two paragraphs.
+                            matches.extend([index] * max(1, occurrences))
         if len(matches) == 1:
             index = matches[0]
             paragraph = paragraphs[index]

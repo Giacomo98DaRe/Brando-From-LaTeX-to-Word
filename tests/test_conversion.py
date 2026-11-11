@@ -102,11 +102,27 @@ def test_ambiguous_and_unused_source_notes_never_attach_to_matching_body(tmp_pat
     result = convert(source, tmp_path / "out", Options(comments=True))
     report = json.loads((result.parent / "conversion-report.json").read_text())
     assert report["source_comments_exported"] == 4
-    assert report["body_source_comments"] == 1
+    assert report["body_source_comments"] == 1, report["source_comment_anchors"]
     assert report["appendix_source_comments"] == 3
     anchors = report["source_comment_anchors"]
     assert next(a for a in anchors if a["file"] == "unused.tex")["anchor"] == "appendix"
     assert next(a for a in anchors if a["file"] == "refs.bib")["anchor"] == "appendix"
+
+
+def test_repeated_context_in_one_word_paragraph_keeps_note_in_appendix():
+    from docx import Document
+
+    from brando.annotations import add_source_comments
+    from brando.project import Project, source_notes
+
+    sentence = "Repeated context appears identically within one manuscript paragraph."
+    project = Project({"main.tex": (sentence + " % Ambiguous note").encode()}, "")
+    notes, _ = source_notes(project)
+    doc = Document()
+    doc.add_paragraph(sentence + " " + sentence)
+    anchors = add_source_comments(doc, notes, project, "main.tex")
+    assert len(anchors) == 1
+    assert anchors[0]["anchor"] == "appendix"
 
 
 def test_source_notes_before_heading_and_caption_use_their_word_paragraphs(tmp_path):

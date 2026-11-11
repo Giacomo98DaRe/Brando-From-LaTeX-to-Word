@@ -4,7 +4,7 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 54 passing tests on the Windows host.
+- Full synthetic regression suite completed with 55 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
@@ -143,3 +143,8 @@ The public Windows preview uses system Microsoft runtime libraries; the optional
 software-OpenGL fallback is excluded. Exact upstream Qt/PySide 6.10.1 source archives and
 original notices accompany the preview release. Clean Windows-machine, LibreOffice and
 interactive scaling checks remain separate acceptance tasks.
+
+Native Linux/macOS CI exposed repeated source-note context within a single Word paragraph.
+Comment placement now counts repeated occurrences inside each paragraph as ambiguous,
+using Source annotations rather than attaching an arbitrary body comment. A direct Word
+paragraph regression covers this case independently of engine paragraph splitting.
