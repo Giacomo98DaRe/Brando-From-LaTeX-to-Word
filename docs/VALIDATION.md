@@ -82,12 +82,11 @@ The corrected package passed relocated offscreen Qt startup, ZIP conversion with
 off/on, independent number checks and a bounded worker-error diagnostic test. The child PATH
 contained only Windows system tools. These checks used the existing development host.
 
-The 2026-11-09 dependency check found that the locked pypdfium2 5.15.1 release had been
-withdrawn because of object cleanup during interpreter exit. The lock still records the
-tested baseline. Review and validate an upstream correction before public distribution.
-The upstream changelog also records native fixes in 5.15, so a downgrade needs separate review.
-[PyPI release metadata](https://pypi.org/pypi/pypdfium2/5.15.1/json),
-[upstream changelog](https://pypdfium2-team.github.io/pypdfium2/changelog.html).
+The 2026-11-09 dependency check found pypdfium2 5.15.1 withdrawn for object cleanup during
+interpreter exit. On 2026-11-11 the project updated the lock to 5.15.2, whose maintenance
+release corrects shutdown and protects object trackers during traversal. The runtime license
+inventory follows the new version. PDF rendering and packaged checks cover this correction.
+[Upstream 5.15.2 release](https://github.com/pypdfium2-team/pypdfium2/releases/tag/5.15.2).
 
 ## Pending final checks
 
@@ -97,7 +96,6 @@ The upstream changelog also records native fixes in 5.15, so a downgrade needs s
 - Separate LibreOffice compatibility check and version record.
 - Native macOS and Ubuntu builds, GUI/clean-machine tests and distribution checks.
 - Complete Qt bundled notices/corresponding-source provision before public binary distribution.
-- Resolve the withdrawn PDFium binding release and repeat PDF/package acceptance checks.
 
 No platform is declared publicly supported. Build generation, DOCX structural integrity,
 source-content observations, application portability and document rendering remain distinct.

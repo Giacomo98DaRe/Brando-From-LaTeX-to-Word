@@ -123,6 +123,9 @@ def main():
             report = json.loads((output.parent / "conversion-report.json").read_text())
             assert not report["independent_source_observations"]["missing_numeric_tables"]
             assert report["inline_engine_comments"] == index
+            assert report["body_source_comments"] >= index
+            assert report["body_source_comments"] + report["appendix_source_comments"] == 3 * index
+            assert len(report["source_comment_anchors"]) == 3 * index
         springer = work / "Springer folder"
         springer.mkdir()
         springer_source = (
