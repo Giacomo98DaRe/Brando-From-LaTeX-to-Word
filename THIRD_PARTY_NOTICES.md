@@ -1,4 +1,4 @@
-# Third-party notices and distribution status
+# Third-party notices
 
 Brando's original code and synthetic examples use the MIT license in `LICENSE`. This does
 not replace any dependency license. No code or CSL file was copied from the legacy exporter.
@@ -21,7 +21,7 @@ to `third-party-notices/versions.json`, and copies available original notices wi
 | pypdfium2 / PDFium | 5.15.2 | Apache-2.0 / BSD-3-Clause and PDFium dependency notices |
 | latex2mathml | 3.81.1 | MIT; wheel and source archive omit a license file, supplemented from upstream |
 | typing_extensions | 4.16.0 | PSF-2.0 |
-| Microsoft Visual C++ runtime on Windows | 14.44.35211.0 | Microsoft redistributable terms require final distribution review |
+| Microsoft Visual C++ runtime on Windows | System prerequisite | Install from Microsoft if absent; loose runtime DLLs are excluded from the ZIP |
 
 PyInstaller 6.17.0 is a build tool with a GPL exception for generated bundles. Pandoc 3.9
 and pypandoc_binary 1.17 are local evaluation tools only, excluded from the application.
@@ -29,23 +29,42 @@ Ruff 0.17.4 is an MIT-licensed development formatter/linter, excluded from the a
 No third-party CSL style or sample manuscript is bundled; engine-provided styles retain
 the engine's original notices. The example project is original synthetic material.
 
-## Qt / LGPL distribution approach
+## Qt / LGPL distribution
 
-The desktop uses Qt Core, Gui and Widgets via unmodified PySide6. The directory bundle keeps
-shared libraries separate and replaceable. Brando imposes no restriction on reverse
-engineering for debugging modified LGPL libraries. Replacement instructions and source
-provision must accompany a public distribution. Keep the matching version/ABI when replacing
-libraries; do so in a copy of the portable directory.
+Brando uses unmodified Qt 6.10.1 Core, Gui, Network, Widgets and Svg through PySide6 Essentials
+and Shiboken6 6.10.1 under the LGPLv3 option. `resources/licenses/` contains the LGPLv3/GPLv3
+texts and original upstream attribution/license notices for these modules, including their
+optional bundled dependencies. A conservative notice inventory does not imply every optional
+component is linked. The Windows app does not ship the optional Mesa `opengl32sw.dll`.
 
-Supplemental LGPLv3 and GPLv3 texts are included under `resources/licenses/`. They supplement
-the wheel's incomplete license-text payload; they do not convert Qt to an MIT dependency.
-Before public binary distribution, complete a module-by-module Qt bundled-dependency notice
-audit and supply the applicable corresponding source/source offer for the exact Qt, PySide6
-and Shiboken build. Source URLs alone are not treated here as completed compliance.
+The preview release provides the complete upstream `qtbase`, `qtsvg` and `pyside-setup`
+6.10.1 source archives alongside the application, with hashes and upstream URLs in
+[`resources/licenses/QT_SOURCES.json`](resources/licenses/QT_SOURCES.json).
+Download them from the [same release](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0-preview.1).
+These are source downloads for rebuilding the LGPL libraries; users do not need them to run Brando.
+Brando's matching source and build instructions are in this repository and the tagged release.
+No Qt/PySide library source modifications are made by Brando.
 
-**The current bundle is a local development artifact, not cleared for public distribution.**
-The prepared automation builds reviewable artifacts; it does not publish a release or certify
-license compliance, signing, notarization, platform support or document fidelity.
+The directory bundle keeps shared libraries separate and replaceable. Brando imposes no
+restriction on reverse engineering for debugging modified LGPL libraries. To replace them,
+work in a copy of the extracted app: replace the matching files under `_internal/PySide6/`
+and `_internal/shiboken6/` with compatible shared libraries/bindings for the same Python ABI,
+architecture and Qt version, retaining their licenses. Alternatively build Brando from source
+with your rebuilt PySide6 environment using `scripts/build.py`. No signature or online check
+prevents replacement. Test the modified app before using its exports.
+
+## Windows runtime
+
+The public Windows ZIP excludes standalone Microsoft `MSVCP140*.dll` and `VCRUNTIME140*.dll`.
+Install the [official x64 Visual C++ runtime](https://aka.ms/vc14/vc_redist.x64.exe) if it is
+not already present. Brando does not run that installer or alter the system automatically.
+The original Python license includes the conditions for Microsoft code embedded in the
+Python binaries; keep that notice when redistributing the app. This is separate from the
+licenses for Brando and its open-source dependencies.
+
+The package includes original dependency notices under `third-party-notices/` and a version
+inventory. Keep these with any redistributed copy. The preview is unsigned; packaging checks
+are not a certification of document fidelity or clean-machine compatibility.
 
 Primary references:
 

@@ -9,6 +9,7 @@ resources/licenses/SOURCES.json text eol=lf
 *.png binary
 *.jpg binary
 *.jpeg binary
+*.gif binary
 *.docx binary
 *.pdf binary
 *.zip binary

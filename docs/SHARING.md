@@ -7,6 +7,9 @@ No GitHub account is needed for public downloads.
 
 Extract the whole ZIP to a writable local folder and open `Brando/Brando.exe`.
 Keep `_internal` next to the executable. Try `example-project`, then an Overleaf source ZIP.
+The app uses the Microsoft Visual C++ x64 runtime installed on Windows. If a runtime DLL
+is missing, install it from [Microsoft](https://aka.ms/vc14/vc_redist.x64.exe) and retry.
+Brando does not install or change system components automatically.
 The preview is unsigned. If Windows or an organization policy blocks it, verify the source
 and checksum and ask your IT administrator; do not disable security protections.
 

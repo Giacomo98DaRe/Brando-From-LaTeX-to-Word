@@ -13,6 +13,11 @@
     "latex2mathml-LICENSE": {
       "url": "https://raw.githubusercontent.com/roniemartinez/latex2mathml/master/LICENSE",
       "sha256": "4ac1e1da07f6b343d54191c5e1716840534e08591b3f9eaec90d6800cdc47543"
+    },
+    "Qt-6.10.1-NOTICES.txt": {
+      "sources_manifest": "QT_SOURCES.json",
+      "sha256": "050b69b70780ffbdde4f42de54cc446619911da5686313fd54632e38923a37ec",
+      "method": "Original runtime-module attribution metadata and referenced license files from the exact source archives; section headers added without editing payloads."
     }
   }
 }

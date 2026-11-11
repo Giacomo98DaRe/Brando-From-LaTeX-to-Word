@@ -4,7 +4,7 @@
 
 | Target | Initial baseline | Architecture | Artifact | Status |
 | --- | --- | --- | --- | --- |
-| Windows | Windows 11 | x86-64 | portable directory / ZIP | local development build under validation |
+| Windows | Windows 11 | x86-64 | portable directory / ZIP | unsigned preview; local package checks pass |
 | macOS | macOS 14+ | arm64 | `.app` in ZIP, then signed/notarized distribution | recipe prepared, not tested |
 | Linux | Ubuntu 24.04 LTS | x86-64 | portable directory in tar.gz | recipe prepared, not tested |
 
@@ -30,6 +30,10 @@ Use `.venv/bin/python` and `dist/Brando/Brando` on Linux. macOS executable:
 `dist/Brando.app/Contents/MacOS/Brando`. Build output includes runtime/engine resources,
 synthetic example, original dependency notices, version inventory and file hashes. Keep the
 entire directory/app together. No external Pandoc/TeX/Word executable is needed to convert.
+On Windows install Microsoft Visual C++ x64 runtime if absent; standalone Microsoft runtime
+DLLs are excluded from the archive. The optional Mesa software-OpenGL fallback is also excluded
+because this Qt Widgets interface uses raster painting. Both palettes are smoke-tested after
+these exclusions.
 
 The smoke script relocates the bundle to a path with spaces and Unicode, checks offscreen Qt
 startup, uses a restricted child PATH and clears Python/Conda environment variables.
@@ -63,8 +67,8 @@ PyInstaller uses a clean analysis and a workspace-local cache on every build.
    chapters, signed/scientific tables, editable equations, footnotes, bibliography, field
    updates, image rendering and comment anchors.
 5. Check LibreOffice separately and document its version and any rendering differences.
-6. Complete third-party notice/corresponding-source review. Prepare signing, antivirus and
-   download-origin checks for public Windows distribution; record unsigned-build limitations.
+6. Verify notices and matching dependency source archives accompany the release. Record
+   signing, antivirus and download-origin checks separately; this preview remains unsigned.
 
 ## Other platforms and publication
 
@@ -75,7 +79,7 @@ baseline and explicit review of remaining shared-library dependencies.
 
 The GitHub workflow uses only synthetic fixtures. It builds reviewable artifacts on native
 runners, with no automatic release or tag/push operation. Runner results must be inspected
-before updating platform support. A future versioned release requires explicit user request,
+before updating platform support. Versioned release publication requires explicit user request,
 validated packages, SHA-256 files, corresponding source/notices, and documented limitations.
 The presence of prepared release files does not authorize publication.
 
@@ -94,3 +98,14 @@ and exported PDFs. It opens documents read-only, closes its own documents/instan
 returns failure for a missing expectation, a changed input hash or an opening/export error.
 Keep corpus manifests, DOCX, PDFs and reports under ignored `evaluation/`. Inspect relevant
 rendered pages separately and record the scope of that visual review.
+
+## Developer CLI
+
+```powershell
+.venv/Scripts/python.exe -m brando.cli examples/article --destination outputs
+.venv/Scripts/python.exe -m brando.cli project.zip --main main.tex --destination outputs --comments
+```
+
+Main-document discovery is heuristic. Use `--main` for nested roots or a main file whose
+class declaration is in an included preamble. A reference DOCX controls Word styles and
+page geometry, independently of source-template recognition. See `--help` for options.

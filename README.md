@@ -26,6 +26,8 @@ text, equations, tables, figures and citations before sharing: custom macros and
 lose content. All template families remain experimental. See the [test evidence](docs/VALIDATION.md)
 and [public-project evaluation](docs/PUBLIC_CORPUS.md). Clean-machine acceptance is still pending;
 macOS and Linux downloads are not offered yet.
+If the app reports a missing Microsoft runtime DLL, install the official
+[Visual C++ x64 runtime](https://aka.ms/vc14/vc_redist.x64.exe). It is not included in the ZIP.
 
 For development, use a separate Python 3.12 environment:
 

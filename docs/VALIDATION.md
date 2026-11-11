@@ -4,7 +4,7 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 51 passing tests on the Windows host.
+- Full synthetic regression suite completed with 54 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
@@ -125,3 +125,21 @@ inventory follows the new version. PDF rendering and packaged checks cover this 
 
 No platform is declared publicly supported. Build generation, DOCX structural integrity,
 source-content observations, application portability and document rendering remain distinct.
+
+## Public preview preparation
+
+The fresh public-project evaluation completed 30 folder/ZIP conversions across ten documents.
+All 177 selected text checks and 18 numeric-row checks pass. Minimum structure checks pass
+in 27/30 runs: one thesis loses a conditional PDF figure in all three modes. A nested ICLR
+bibliography path was fixed; complete absence of available project graphics is now warned.
+See [the pinned source inventory and limits](PUBLIC_CORPUS.md). Fresh Word automation stalled,
+so Word rendering acceptance for this new corpus is inconclusive. Earlier rendering evidence
+above applies only to the earlier samples.
+
+The README demo records actual Qt ZIP import, opt-in comments and conversion of the original
+synthetic example, with three native comments independently verified. No private manuscript,
+source archive, local history or development toolchain is included in the published source.
+The public Windows preview uses system Microsoft runtime libraries; the optional Mesa
+software-OpenGL fallback is excluded. Exact upstream Qt/PySide 6.10.1 source archives and
+original notices accompany the preview release. Clean Windows-machine, LibreOffice and
+interactive scaling checks remain separate acceptance tasks.

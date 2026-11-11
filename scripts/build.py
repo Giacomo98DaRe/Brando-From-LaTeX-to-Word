@@ -137,6 +137,13 @@ def main():
         data = package / "Contents/Resources"
     else:
         data = package
+    if sys.platform == "win32":
+        # Qt Widgets uses raster painting here, not the optional Mesa OpenGL fallback.
+        # Use Microsoft's separately installed runtime rather than redistributing its DLLs.
+        for path in package.rglob("*.dll"):
+            name = path.name.lower()
+            if name == "opengl32sw.dll" or name.startswith(("msvcp140", "vcruntime140")):
+                path.unlink()
     shutil.copytree(stage, data / "third-party-notices", dirs_exist_ok=True)
     shutil.copytree(ROOT / "docs", data / "docs", dirs_exist_ok=True)
     for name in ("LICENSE", "THIRD_PARTY_NOTICES.md", "README.md"):
