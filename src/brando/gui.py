@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import threading
+from html import escape
 from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths, Qt, QThread, QTimer, QUrl, Signal
@@ -149,6 +150,9 @@ class Window(QMainWindow):
         layout.addLayout(self.build_actions())
         self.layout_changed()
         self.update_comment_status()
+        self.destination.textChanged.connect(self.update_readiness)
+        self.reference.textChanged.connect(self.update_readiness)
+        self.layout_choice.currentIndexChanged.connect(self.update_readiness)
         self.theme_toggle.toggled.connect(lambda dark: apply_theme(self, dark))
         apply_theme(self, False)
 
@@ -292,11 +296,26 @@ class Window(QMainWindow):
 
     def build_actions(self) -> QHBoxLayout:
         actions = QHBoxLayout()
+        self.status_chip = QFrame()
+        self.status_chip.setObjectName("conversionStatus")
+        self.status_chip.setProperty("state", "idle")
+        self.status_chip.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        chip_layout = QHBoxLayout(self.status_chip)
+        chip_layout.setContentsMargins(12, 9, 12, 9)
+        chip_layout.setSpacing(8)
+        dot = QLabel()
+        dot.setObjectName("statusDot")
+        dot.setFixedSize(8, 8)
+        chip_layout.addWidget(dot)
         self.status = QLabel("Choose a project to begin.")
-        self.status.setWordWrap(True)
+        self.status.setObjectName("statusText")
+        self.status.setAccessibleName("Conversion status")
+        self.status.setMaximumWidth(400)
+        self.status.setWordWrap(False)
         self.status.setTextFormat(Qt.TextFormat.PlainText)
+        chip_layout.addWidget(self.status)
         state = QVBoxLayout()
-        state.addWidget(self.status)
+        state.addWidget(self.status_chip, 0, Qt.AlignmentFlag.AlignLeft)
         self.bar = QProgressBar()
         self.bar.setRange(0, 1)
         self.bar.setTextVisible(False)
@@ -383,6 +402,38 @@ class Window(QMainWindow):
                 detected + "Enable to include source notes as Word comments."
             )
 
+    def set_status(self, message: str, state: str):
+        self.status_chip.setProperty("state", state)
+        # Descendant color selectors also need refreshing when the parent state changes.
+        for widget in (self.status_chip, *self.status_chip.findChildren(QLabel)):
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+            widget.update()
+        visible = self.status.fontMetrics().elidedText(message, Qt.TextElideMode.ElideRight, 340)
+        self.status.setText(visible)
+        self.status.setAccessibleDescription(message)
+        self.status.setToolTip(f"<qt><p>{escape(message)}</p></qt>" if visible != message else "")
+
+    def conversion_ready(self) -> bool:
+        return (
+            self.project is not None
+            and self.root.currentText() in self.project.files
+            and bool(self.destination.text().strip())
+            and (self.layout_choice.currentIndex() == 0 or bool(self.reference.text().strip()))
+        )
+
+    def update_readiness(self):
+        if self.task or self.project is None:
+            return
+        ready = self.conversion_ready()
+        self.convert_button.setEnabled(ready)
+        if ready:
+            self.set_status("Ready to convert.", "ready")
+        elif self.root.currentText() not in self.project.files:
+            self.set_status("Choose a main document.", "idle")
+        else:
+            self.set_status("Complete the conversion options.", "idle")
+
     def set_busy(self, busy):
         for widget in (
             self.zip_button,
@@ -397,7 +448,7 @@ class Window(QMainWindow):
             widget.setEnabled(not busy)
         self.reference.setEnabled(not busy and self.layout_choice.currentIndex() == 1)
         self.reference_button.setEnabled(self.reference.isEnabled())
-        self.convert_button.setEnabled(not busy and self.project is not None)
+        self.convert_button.setEnabled(not busy and self.conversion_ready())
         self.cancel_button.setEnabled(busy)
         self.cancel_button.setVisible(busy)
         self.drop_area.setAcceptDrops(not busy)
@@ -409,7 +460,7 @@ class Window(QMainWindow):
         self.set_busy(True)
         self.task = Task(action, self)
         self.task.progress.connect(self.log.appendPlainText)
-        self.task.progress.connect(self.status.setText)
+        self.task.progress.connect(lambda message: self.set_status(message, "busy"))
         self.task.succeeded.connect(success)
         self.task.failed.connect(self.task_failed)
         self.task.finished.connect(self.task_finished)
@@ -418,7 +469,7 @@ class Window(QMainWindow):
     def task_failed(self, message):
         self.log.appendPlainText(message)
         summary = message.splitlines()[0] if message else "The operation could not be completed."
-        self.status.setText(summary[:180])
+        self.set_status(summary[:180], "error")
         self.details_button.setChecked(True)
         if self.project is None:
             self.drop_area.summary.setText("Choose a source ZIP or project folder to retry.")
@@ -427,6 +478,8 @@ class Window(QMainWindow):
         task = self.task
         self.task = None
         self.set_busy(False)
+        if self.status_chip.property("state") == "busy":
+            self.update_readiness()
         if task:
             task.deleteLater()
 
@@ -451,7 +504,7 @@ class Window(QMainWindow):
             button.setEnabled(False)
             button.hide()
         self.details_button.setChecked(False)
-        self.status.setText("Reading the project...")
+        self.set_status("Reading the project...", "busy")
         self.drop_area.summary.setText("Reading the project...")
         self.log.appendPlainText("Reading the project…")
 
@@ -493,9 +546,7 @@ class Window(QMainWindow):
             f"{self.project_path.name} — {len(self.project.files)} captured files. "
             f"{len(candidates)} candidate main documents."
         )
-        self.status.setText(
-            "Ready to convert." if len(candidates) == 1 else "Choose a main document."
-        )
+        self.set_status("Project loaded.", "busy")
 
     def update_template(self):
         if self.project and self.root.currentText() in self.project.files:
@@ -503,6 +554,7 @@ class Window(QMainWindow):
             self.detected.setText(
                 f"Detected: {name}. Support: experimental; inspect the output and notes."
             )
+        self.update_readiness()
 
     def start_conversion(self):
         if (
@@ -538,6 +590,7 @@ class Window(QMainWindow):
         self.open_word.hide()
         self.open_folder.hide()
         self.log.clear()
+        self.set_status("Converting to Word...", "busy")
         self.run_task(
             lambda cancel, progress: convert(path, destination, opts, cancel, progress, project),
             self.converted,
@@ -566,7 +619,7 @@ class Window(QMainWindow):
         self.open_folder.setEnabled(True)
         self.open_word.show()
         self.open_folder.show()
-        self.status.setText("Word file ready.")
+        self.set_status("Word file ready.", "ready")
         self.details_button.setChecked(bool(report["warnings"]))
         self.bar.setValue(1)
 

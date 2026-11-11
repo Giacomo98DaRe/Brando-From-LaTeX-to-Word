@@ -31,6 +31,10 @@ LAGOON = {
     "disabled_text": "#607881",
     "tooltip": "#15313B",
     "tooltip_text": "#FFFFFF",
+    "ready_background": "#E3F4EE",
+    "ready_text": "#116D53",
+    "error_background": "#FCECEC",
+    "error_text": "#A72531",
 }
 DEEP_TIDE = {
     "background": "#0A1923",
@@ -51,6 +55,10 @@ DEEP_TIDE = {
     "disabled_text": "#91A9B2",
     "tooltip": "#E9F5F6",
     "tooltip_text": "#15313B",
+    "ready_background": "#163F35",
+    "ready_text": "#85E8CC",
+    "error_background": "#462B35",
+    "error_text": "#FFB5BC",
 }
 
 

@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 import pytest
 from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
-from PySide6.QtGui import QDragEnterEvent, QDropEvent
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QToolButton, QToolTip
 
@@ -39,6 +39,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
     window = Window()
     try:
         assert not window.comments.isChecked()
+        assert window.status_chip.property("state") == "idle"
         assert window.findChild(QLabel, "commentTitle").text() == "Source comments"
         assert window.theme_toggle.accessibleName() == "Use dark mode"
         assert any(label.text() == "Dark mode" for label in window.findChildren(QLabel))
@@ -47,9 +48,11 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
         assert len(information) == 9
         assert all(button.toolTip() and button.accessibleName() for button in information)
         window.select_project(EXAMPLE)
+        assert window.status_chip.property("state") == "busy"
         assert window.cancel_button.isEnabled()
         complete(app, window)
         assert window.root.currentText() == "main.tex"
+        assert window.status_chip.property("state") == "ready"
         assert "Standard article" in window.detected.text()
         assert window.source_comment_count == 3
         assert "3 source notes found" in window.comment_status.text()
@@ -62,6 +65,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
         assert window.comment_status.text() == "3 source notes found. " + expected_status
         window.destination.setText(str(tmp_path))
         window.start_conversion()
+        assert window.status_chip.property("state") == "busy"
         assert complete(app, window) > 1
         assert window.output and window.output.is_file(), window.log.toPlainText()
         assert "Avery Example" in inspect_docx(window.output)["text"]
@@ -70,6 +74,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
             "Source comments exported: 3" if include_comments else "Source comments excluded"
         ) in window.log.toPlainText()
         assert window.open_word.isEnabled()
+        assert window.status_chip.property("state") == "ready"
         assert (window.output.parent / "conversion-notes.txt").is_file()
         assert "Saved beside Word: conversion-notes.txt" in window.log.toPlainText()
         previous = window.output
@@ -78,6 +83,7 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
         window.select_project(str(invalid))
         complete(app, window)
         assert window.output is None
+        assert window.status_chip.property("state") == "error"
         assert not window.open_word.isEnabled()
         assert "retry" in window.drop_area.summary.text()
         assert previous.is_file()
@@ -188,6 +194,10 @@ def test_long_failure_keeps_compact_window_actions_visible(app):
         window.task_failed(diagnostic)
         QTest.qWait(20)
         assert len(window.status.text()) <= 180
+        assert window.status.fontMetrics().horizontalAdvance(window.status.text()) <= (
+            window.status.contentsRect().width()
+        )
+        assert window.status.height() >= window.status.fontMetrics().height()
         assert window.log.toPlainText() == diagnostic
         assert window.details_button.isChecked()
         bottom = window.convert_button.mapTo(window, window.convert_button.rect().bottomRight())
@@ -297,5 +307,46 @@ def test_project_selection_shows_name_and_details_explain_saved_files(app):
         window.log.clear()
         assert not window.details_button.isEnabled()
         assert not window.details_panel.isVisible()
+    finally:
+        window.close()
+
+
+@pytest.mark.parametrize("dark", [False, True])
+def test_status_indicator_tracks_required_options(app, tmp_path, dark):
+    window = Window()
+    window.theme_toggle.setChecked(dark)
+    window.show()
+    try:
+        window.select_project(EXAMPLE)
+        complete(app, window)
+        assert window.status_chip.property("state") == "ready"
+        color = window.status.palette().color(QPalette.ColorRole.WindowText)
+        assert color.green() > max(color.red(), color.blue())
+        QTest.qWait(20)
+        assert window.status.fontMetrics().horizontalAdvance(window.status.text()) <= (
+            window.status.contentsRect().width()
+        )
+        assert window.status.height() >= window.status.fontMetrics().height()
+
+        window.destination.clear()
+        assert window.status_chip.property("state") == "idle"
+        assert not window.convert_button.isEnabled()
+        window.destination.setText(str(tmp_path))
+        assert window.status_chip.property("state") == "ready"
+        window.root.setEditText("missing.tex")
+        assert window.status_chip.property("state") == "idle"
+        assert not window.convert_button.isEnabled()
+        window.root.setCurrentText("main.tex")
+        window.layout_choice.setCurrentIndex(1)
+        assert window.status_chip.property("state") == "idle"
+        assert not window.convert_button.isEnabled()
+        window.reference.setText(str(tmp_path / "reference.docx"))
+        assert window.status_chip.property("state") == "ready"
+        assert window.convert_button.isEnabled()
+
+        window.task_failed("Synthetic conversion error")
+        assert window.status_chip.property("state") == "error"
+        color = window.status.palette().color(QPalette.ColorRole.WindowText)
+        assert color.red() > max(color.green(), color.blue())
     finally:
         window.close()
