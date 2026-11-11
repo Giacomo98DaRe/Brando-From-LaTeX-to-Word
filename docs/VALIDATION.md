@@ -148,3 +148,11 @@ Native Linux/macOS CI exposed repeated source-note context within a single Word 
 Comment placement now counts repeated occurrences inside each paragraph as ambiguous,
 using Source annotations rather than attaching an arbitrary body comment. A direct Word
 paragraph regression covers this case independently of engine paragraph splitting.
+
+The [native CI run on preview code](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/actions/runs/43067502485)
+passes all 55 synthetic tests, Ruff, native builds and relocated package smoke on Windows 2022,
+macOS 15 arm64 and Ubuntu 24.04. The separately built Windows 11 preview also passes native
+light/dark startup, seven matching executable icons, complete file-manifest verification and
+10 restricted-PATH public-project conversions: 66 selected text and 12 numeric-row checks,
+comments off/on, with the known Cyrraz figure loss correctly warned. Only the Windows preview
+is distributed. These checks do not replace Word rendering or interactive clean-machine trials.

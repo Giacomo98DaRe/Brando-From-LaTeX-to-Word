@@ -5,8 +5,8 @@
 | Target | Initial baseline | Architecture | Artifact | Status |
 | --- | --- | --- | --- | --- |
 | Windows | Windows 11 | x86-64 | portable directory / ZIP | unsigned preview; local package checks pass |
-| macOS | macOS 14+ | arm64 | `.app` in ZIP, then signed/notarized distribution | recipe prepared, not tested |
-| Linux | Ubuntu 24.04 LTS | x86-64 | portable directory in tar.gz | recipe prepared, not tested |
+| macOS | macOS 14+ | arm64 | `.app` in ZIP, then signed/notarized distribution | native CI build/smoke passed; interactive acceptance pending |
+| Linux | Ubuntu 24.04 LTS | x86-64 | portable directory in tar.gz | native CI build/smoke passed; interactive acceptance pending |
 
 These are validation targets, not claims of support. Other OS versions/architectures are
 unvalidated. Build on each native target; PyInstaller does not cross-compile the application.
@@ -78,8 +78,9 @@ recipe is only a development artifact. Linux needs native GUI tests on the decla
 baseline and explicit review of remaining shared-library dependencies.
 
 The GitHub workflow uses only synthetic fixtures. It builds reviewable artifacts on native
-runners, with no automatic release or tag/push operation. Runner results must be inspected
-before updating platform support. Versioned release publication requires explicit user request,
+runners, with no automatic release or tag/push operation. Native Windows/macOS/Linux tests, builds and relocated package smoke passed on
+[the preview code](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/actions/runs/43067502485).
+These headless checks do not establish interactive platform support. Versioned release publication requires explicit user request,
 validated packages, SHA-256 files, corresponding source/notices, and documented limitations.
 The presence of prepared release files does not authorize publication.
 
