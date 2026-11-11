@@ -19,9 +19,11 @@
 - `widgets.py` provides the large project drop target, keyboard-operable switches and option
   information controls. Help wraps within a bounded tooltip, with a short hover delay and
   stable placement beside its control; click/Space opens it and Escape dismisses it.
-  Manual project paths load on Enter, with draft edits disabling conversion of an older snapshot.
+  ZIP/folder selection and drop use the same capture entry point and display the selected name.
   The read-only details panel explains session messages and their saved export counterparts.
-  `appearance.py` applies Lagoon or Deep Tide to the same widget tree.
+  The footer indicator and conversion button share the required-option readiness check.
+  Status uses neutral, progress, green-ready and red-error colors with a readable text label.
+  `appearance.py` applies light or dark colors to the same widget tree.
   The theme choice is local to the window session. Compact windows scroll the content while
   conversion actions remain available.
 - `desktop.py` isolates Windows application identity and per-window native title-bar colors.

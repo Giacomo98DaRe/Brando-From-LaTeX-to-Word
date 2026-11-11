@@ -4,7 +4,7 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 
 ## Completed evidence
 
-- Full synthetic regression suite completed with 49 passing tests on the Windows host.
+- Full synthetic regression suite completed with 51 passing tests on the Windows host.
   It includes Qt offscreen scan, conversion, drop and ambiguous-root behavior, numerical
   tampering detection, nested-main paths, encoding adaptation and inline annotation opt-in.
   A simulated report-write failure also verifies cleanup without a partial export.
@@ -17,18 +17,23 @@ Updated 2026-11-11. Development host is Windows x86-64, CPython 3.12.16.
 - Information controls were exercised with mouse hover, click and keyboard activation in both
   palettes. Help stays anchored while the pointer moves within the button; actual multiline
   rendering stays below 340 pixels wide. Eighteen rendered tips across both themes were
-  measured. The Brando wordmark uses its capital B. Manual path input loads only on Enter;
-  changing focus does not import an unfinished path, and draft edits disable stale conversion.
+  measured. The Brando wordmark uses its capital B. Project selection uses ZIP/folder buttons
+  or drop, with the chosen project name shown and no manual path input. The Source comments
+  summary follows its switch, with native Word comment counts verified for both export states.
+  The header names its appearance switch Dark mode.
+  The footer status indicator follows idle, busy, ready and error transitions. Regressions in
+  both modes verify actual green/red text colors and require a main document, destination and
+  reference path when reference styling is selected before enabling conversion.
   The details panel is unavailable while empty and explains progress/warnings, the saved note
   and report filenames, and their distinction from Word comments. Compact error captures retain
   visible conversion actions.
-- The selected Lagoon desktop has a large drop target and prominent source-comment switch.
-  Deep Tide changes colors in place. Keyboard theme activation preserves widget geometry,
+- The light desktop has a large drop target and prominent source-comment switch.
+  Dark mode changes colors in place. Keyboard theme activation preserves widget geometry,
   captured input and conversion choices, including during conversion. ZIP and folder drop
   events are delivered through Qt to the large target. Compact-window captures verify scrolling
   with conversion actions available. The approved crayon B icon is used by the window.
 - The selected crayon B identity (concept 07) uses mint artwork on a rounded petrol tile
-  in the header, drop target, window and Windows executable. Actual Lagoon/Deep Tide screenshots
+  in the header, drop target, window and Windows executable. Actual light/dark screenshots
   and icon renders at 16-256 pixels were inspected. All seven EXE icon payloads match the ICO
   exactly. All four production resources match their bundled copies. The full regression suite,
   Ruff checks and relocated package smoke passed after replacement.

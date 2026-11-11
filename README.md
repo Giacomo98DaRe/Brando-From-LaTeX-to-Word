@@ -15,14 +15,13 @@ directory together, unzip it to a writable local folder and open `Brando.exe`. E
 of this bundle do not need Python, Git, Pandoc or TeX. Public installation assets have not
 been published. See [build and validation instructions](docs/BUILDING.md).
 
-1. Select or drop an Overleaf **source ZIP** or a project folder. Alternatively, paste its
-   path in **Project path (optional)** and press **Enter** to load it. Moving focus alone
-   does not load a typed path; conversion stays disabled while a changed path is unconfirmed.
+1. Select or drop an Overleaf **source ZIP** or a project folder. The selected project name
+   appears below the drop area controls.
 2. Choose the main `.tex` file if there are several candidates. Convert separate supplements
    separately; independently compilable `subfiles` chapters are not automatically roots.
 3. Leave source template on **Auto**, or override it. Choose readable review styling or a
    reference DOCX. Source recognition and Word styling are separate choices.
-4. Optionally turn on **Include source comments**. It starts off.
+4. Optionally enable **Source comments**. Comments start disabled.
    Each option has an adjacent information button. The interface shows detected note counts
    and whether comments will be exported. The default destination is `Documents/Brando_exports`.
 5. Choose an output folder outside the source folder, then select **Convert to Word**.
@@ -33,10 +32,12 @@ Each export has a fresh timestamped folder containing `manuscript.docx`,
 unchanged. The report records input/output hashes, engine diagnostics, math coverage,
 independent source observations and actual comment coverage.
 
-The Lagoon interface starts with a large project drop area and a dedicated source-comment
-control. The small **Deep Tide** slide in the header changes the color palette while preserving
-the layout and conversion choices. Each new window starts in Lagoon. Information buttons
+The interface starts in light mode with a large project drop area and a dedicated source-comment
+control. The **Dark mode** switch in the header changes the color palette while preserving
+the layout and conversion choices. Each new window starts in light mode. Information buttons
 beside the options show short, wrapped help on hover or activation with the keyboard.
+A compact status indicator shows setup, progress, readiness and errors. It turns green when
+the required conversion options are complete and red when an error needs attention.
 **Conversion details** shows session progress, warnings and errors in a read-only panel.
 It becomes available after there is something to show, and opens automatically on errors
 or conversion warnings. The panel explains where the saved notes and report are stored.
@@ -44,9 +45,9 @@ or conversion warnings. The panel explains where the saved notes and report are 
 the full diagnostic and coverage details. Both are saved beside `manuscript.docx` in the
 new export folder. These diagnostics are separate from the source comments inside Word.
 
-![Lagoon desktop](docs/images/desktop.png)
+![Light mode desktop](docs/images/desktop.png)
 
-![The same desktop with Deep Tide colors](docs/images/desktop-dark.png)
+![Dark mode desktop](docs/images/desktop-dark.png)
 
 ## Compatibility targets
 
