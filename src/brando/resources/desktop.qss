@@ -65,16 +65,12 @@ QProgressBar { background: $border; border: none; border-radius: 2px; min-height
 QProgressBar::chunk { background: $accent; border-radius: 2px; }
 QFrame#conversionStatus { background: $disabled; border: 1px solid $border; border-radius: 12px; }
 QFrame#conversionStatus QLabel#statusText { color: $muted; font-weight: 600; }
-QLabel#statusDot { background: $muted; border-radius: 4px; }
 QFrame#conversionStatus[state="ready"] { background: $ready_background; border-color: $ready_text; }
 QFrame#conversionStatus[state="ready"] QLabel#statusText { color: $ready_text; }
-QFrame#conversionStatus[state="ready"] QLabel#statusDot { background: $ready_text; }
 QFrame#conversionStatus[state="busy"] { background: $info; border-color: $accent; }
 QFrame#conversionStatus[state="busy"] QLabel#statusText { color: $accent; }
-QFrame#conversionStatus[state="busy"] QLabel#statusDot { background: $accent; }
 QFrame#conversionStatus[state="error"] { background: $error_background; border-color: $error_text; }
 QFrame#conversionStatus[state="error"] QLabel#statusText { color: $error_text; }
-QFrame#conversionStatus[state="error"] QLabel#statusDot { background: $error_text; }
 QToolTip {
     background: $tooltip;
     color: $tooltip_text;
