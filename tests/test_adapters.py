@@ -2,8 +2,8 @@ import json
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
-from brando.adapters import adapt_source
-from brando.core import W, convert, inspect_docx
+from brando.adapters import adapt_source, qualify_bibliographies
+from brando.core import Options, W, convert, inspect_docx
 
 
 def test_springer_adapter_preserves_literal_examples_and_other_families():
@@ -23,6 +23,43 @@ def test_springer_adapter_preserves_literal_examples_and_other_families():
     assert r"\verb|\botrule|" in adapted
     assert r"\begin{verbatim}\equalcont{Example}\botrule\end{verbatim}" in adapted
     assert adapt_source(source, "article") == (source, {})
+
+
+def test_nested_bibliography_qualification_preserves_root_choice_and_literals():
+    source = (
+        r"\bibliography{references,shared}"
+        "\n"
+        r"\verb|\bibliography{references}|"
+        "\n"
+        r"\begin{verbatim}\addbibresource{references.bib}\end{verbatim}"
+    )
+    adapted, changes = qualify_bibliographies(
+        source, "paper/main.tex", {"paper/references.bib", "shared.bib", "paper/shared.bib"}
+    )
+    assert r"\bibliography{paper/references.bib,shared}" in adapted
+    assert r"\verb|\bibliography{references}|" in adapted
+    assert r"\begin{verbatim}\addbibresource{references.bib}\end{verbatim}" in adapted
+    assert changes == {"relative_bibliography_paths": 1}
+
+
+def test_nested_main_preserves_local_bibliography_and_source_bytes(tmp_path):
+    folder = tmp_path / "source"
+    nested = folder / "paper"
+    nested.mkdir(parents=True)
+    (folder / "README.txt").write_text("Original nested bibliography regression fixture.")
+    main = (
+        r"\documentclass{article}\begin{document}"
+        r"See \cite{nested}.\bibliography{references}\end{document}"
+    )
+    (nested / "main.tex").write_text(main)
+    (nested / "references.bib").write_text(
+        "@article{nested,author={Ada Fixture},title={Nested bibliography sentinel},year={2024}}"
+    )
+    result = convert(folder, tmp_path / "out", Options(main="paper/main.tex"))
+    assert "Nested bibliography sentinel" in inspect_docx(result)["text"]
+    report = json.loads((result.parent / "conversion-report.json").read_text())
+    assert not any("bibliography file not found" in w for w in report["warnings"])
+    assert (nested / "main.tex").read_text() == main
 
 
 def test_springer_notes_and_rules_are_readable_and_reported(tmp_path):

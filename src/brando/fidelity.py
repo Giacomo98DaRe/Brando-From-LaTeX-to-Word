@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
+from .adapters import LITERAL
 from .project import Project, decode, strip_comments
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -99,6 +100,25 @@ def observe(project: Project, main: str, docx: PathLike) -> dict:
     source, unresolved = source_text(project, main)
     with ZipFile(docx) as z:
         doc = ET.fromstring(z.read("word/document.xml"))
+        embedded_images = sum(name.startswith("word/media/") for name in z.namelist())
+
+    available_graphics = set()
+    for target in commands(LITERAL.sub("", source), "includegraphics"):
+        if any(char in target for char in "\\#{}"):
+            continue
+        extensions = (
+            ("",)
+            if PurePosixPath(target).suffix
+            else (".png", ".jpg", ".jpeg", ".pdf", ".eps", ".svg")
+        )
+        for extension in extensions:
+            for candidate in (
+                target + extension,
+                str(PurePosixPath(main).parent / (target + extension)),
+            ):
+                candidate = posixpath.normpath(candidate)
+                if candidate in project.files:
+                    available_graphics.add(candidate)
 
     def text_of(element: ET.Element) -> str:
         return "".join(
@@ -153,11 +173,17 @@ def observe(project: Project, main: str, docx: PathLike) -> dict:
     return {
         "method": (
             "Static include traversal; simple tabular signed/decimal/scientific token sequences; "
-            "plain title/author text. Complex tables/macros/conditionals are not certified."
+            "plain title/author text; static project graphics versus embedded media. "
+            "Complex tables/macros/conditionals are not certified."
         ),
         "text_checks": expectations,
         "numeric_tables": checked,
         "skipped_complex_tables": skipped,
         "missing_numeric_tables": missing,
         "unresolved_static_includes": unresolved,
+        "graphics": {
+            "available_source_files": sorted(available_graphics),
+            "embedded_images": embedded_images,
+            "all_available_graphics_absent": bool(available_graphics) and embedded_images == 0,
+        },
     }

@@ -13,7 +13,7 @@ def run(request_file: str) -> int:
     import tex2word
     from tex2word import convert_source
 
-    from .adapters import adapt_source
+    from .adapters import adapt_source, qualify_bibliographies
     from .project import decode, document_class, strip_comments
 
     request_path = Path(request_file).resolve()
@@ -59,6 +59,9 @@ def run(request_file: str) -> int:
     family = document_class(strip_comments(text))
     adaptations = []
     template_adaptations = []
+    captured_files = {
+        file.relative_to(project).as_posix() for file in project.rglob("*") if file.is_file()
+    }
     for file in project.rglob("*"):
         if file.suffix.lower() in {".tex", ".bib", ".sty", ".cls", ".bbl"} and file.is_file():
             content, detected = decode(file.read_bytes())
@@ -68,6 +71,10 @@ def run(request_file: str) -> int:
             changes = {}
             if file.suffix.lower() == ".tex":
                 content, changes = adapt_source(content, family)
+                content, paths = qualify_bibliographies(
+                    content, file.relative_to(project).as_posix(), captured_files
+                )
+                changes.update(paths)
             if detected != "utf-8" or changes or is_main:
                 file.write_text(content, encoding="utf-8")
             if detected != "utf-8":

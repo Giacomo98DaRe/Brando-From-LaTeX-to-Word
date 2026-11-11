@@ -180,6 +180,11 @@ def convert(
             warnings.append("Some equations remain raw source, not editable native equations.")
         warnings.extend(skipped)
         warnings.extend(independent["unresolved_static_includes"])
+        if independent["graphics"]["all_available_graphics_absent"]:
+            warnings.append(
+                "Source references available project graphics, but Word contains no embedded "
+                "images. Review figures and conditional image macros."
+            )
         if independent["skipped_complex_tables"]:
             warnings.append(
                 "Independent numerical checks skipped complex source tables: "
