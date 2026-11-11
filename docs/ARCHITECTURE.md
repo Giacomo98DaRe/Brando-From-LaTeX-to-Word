@@ -21,7 +21,7 @@
   The theme choice is local to the window session. Compact windows scroll the content while
   conversion actions remain available.
 - `desktop.py` isolates Windows application identity and per-window native title-bar colors.
-  The approved Bridge icon and stylesheet are packaged under `brando/resources`.
+  The approved crayon B icon and stylesheet are packaged under `brando/resources`.
 - `cli.py`: development/automation adapter to the same core.
 - `__main__.py` dispatches GUI, CLI and isolated-worker modes. The frozen build uses this
   same entry point through a minimal wrapper.
