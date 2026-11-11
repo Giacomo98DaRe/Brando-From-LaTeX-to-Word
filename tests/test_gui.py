@@ -62,6 +62,15 @@ def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
             "Source comments exported: 3" if include_comments else "Source comments were OFF"
         ) in window.log.toPlainText()
         assert window.open_word.isEnabled()
+        previous = window.output
+        invalid = tmp_path / "invalid.zip"
+        invalid.write_bytes(b"Original synthetic invalid archive")
+        window.select_project(str(invalid))
+        complete(app, window)
+        assert window.output is None
+        assert not window.open_word.isEnabled()
+        assert "retry" in window.drop_area.summary.text()
+        assert previous.is_file()
     finally:
         window.close()
 
@@ -158,6 +167,23 @@ def test_unreadable_comment_preview_keeps_project_importable(app, tmp_path):
         assert window.project is not None
         assert window.source_comment_count is None
         assert window.convert_button.isEnabled()
+    finally:
+        window.close()
+
+
+def test_long_failure_keeps_compact_window_actions_visible(app):
+    window = Window()
+    window.resize(880, 620)
+    window.show()
+    try:
+        diagnostic = "Synthetic failure details " * 100 + "\n" + "Trace details " * 1000
+        window.task_failed(diagnostic)
+        QTest.qWait(20)
+        assert len(window.status.text()) <= 180
+        assert window.log.toPlainText() == diagnostic
+        assert window.details_button.isChecked()
+        bottom = window.convert_button.mapTo(window, window.convert_button.rect().bottomRight())
+        assert bottom.y() < window.height()
     finally:
         window.close()
 

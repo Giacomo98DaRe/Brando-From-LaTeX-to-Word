@@ -395,8 +395,11 @@ class Window(QMainWindow):
 
     def task_failed(self, message):
         self.log.appendPlainText(message)
-        self.status.setText(message)
+        summary = message.splitlines()[0] if message else "The operation could not be completed."
+        self.status.setText(summary[:180])
         self.details_button.setChecked(True)
+        if self.project is None:
+            self.drop_area.summary.setText("Choose a source ZIP or project folder to retry.")
 
     def task_finished(self):
         task = self.task
@@ -425,6 +428,11 @@ class Window(QMainWindow):
         self.update_comment_status()
         self.root.clear()
         self.log.clear()
+        self.output = None
+        for button in (self.open_word, self.open_folder):
+            button.setEnabled(False)
+            button.hide()
+        self.details_button.setChecked(False)
         self.status.setText("Reading the project...")
         self.drop_area.summary.setText("Reading the project...")
         self.log.appendPlainText("Reading the project…")
