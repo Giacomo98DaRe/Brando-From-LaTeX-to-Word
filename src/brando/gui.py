@@ -20,7 +20,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMainWindow,
-    QMessageBox,
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
@@ -38,7 +37,7 @@ from .project import Cancelled, Project, capture, decode, source_notes
 from .widgets import DropArea, InformationButton, Switch, dropped_project, option_label
 
 
-def _file_row(field: QLineEdit, *buttons: QPushButton) -> QHBoxLayout:
+def _file_row(field: QWidget, *buttons: QPushButton) -> QHBoxLayout:
     row = QHBoxLayout()
     row.addWidget(field, 1)
     for button in buttons:
@@ -553,29 +552,13 @@ class Window(QMainWindow):
 
     def start_conversion(self):
         if (
-            not self.project
-            or not self.project_path
+            not self.project_path
             or self.task
             or not self.convert_button.isEnabled()
+            or not self.conversion_ready()
         ):
             return
-        if not self.root.currentText() or not self.destination.text().strip():
-            QMessageBox.information(
-                self,
-                "Choose document and destination",
-                "Select a main document and an output folder.",
-            )
-            return
-        ref = None
-        if self.layout_choice.currentIndex() == 1:
-            if not self.reference.text().strip():
-                QMessageBox.information(
-                    self,
-                    "Choose a reference",
-                    "Select a reference DOCX or use the readable review layout.",
-                )
-                return
-            ref = Path(self.reference.text())
+        ref = Path(self.reference.text()) if self.layout_choice.currentIndex() == 1 else None
         opts = Options(
             self.root.currentText(), self.template.currentText(), self.comments.isChecked(), ref
         )

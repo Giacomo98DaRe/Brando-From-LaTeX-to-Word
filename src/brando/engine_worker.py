@@ -59,11 +59,10 @@ def run(request_file: str) -> int:
     family = document_class(strip_comments(text))
     adaptations = []
     template_adaptations = []
-    captured_files = {
-        file.relative_to(project).as_posix() for file in project.rglob("*") if file.is_file()
-    }
-    for file in project.rglob("*"):
-        if file.suffix.lower() in {".tex", ".bib", ".sty", ".cls", ".bbl"} and file.is_file():
+    files = [file for file in project.rglob("*") if file.is_file()]
+    captured_files = {file.relative_to(project).as_posix() for file in files}
+    for file in files:
+        if file.suffix.lower() in {".tex", ".bib", ".sty", ".cls", ".bbl"}:
             content, detected = decode(file.read_bytes())
             is_main = file == project / request["main"]
             if is_main:
