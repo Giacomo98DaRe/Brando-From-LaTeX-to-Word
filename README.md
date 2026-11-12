@@ -3,6 +3,8 @@
 Turn an Overleaf source ZIP or LaTeX project folder into an editable Word document.
 Conversion runs on your computer, with optional source comments and light or dark mode.
 
+Created and maintained by **Giacomo Da Re**. [Cite Brando](CITATION.cff).
+
 ## Get Brando
 
 **[Download for Windows](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0-preview.1/Brando-0.1.0-win32-AMD64.zip)**

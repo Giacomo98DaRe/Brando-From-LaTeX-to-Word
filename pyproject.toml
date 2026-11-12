@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "brando-word"
 version = "0.1.0"
 description = "Local Overleaf project to editable Word desktop converter"
+authors = [{name = "Giacomo Da Re"}]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"

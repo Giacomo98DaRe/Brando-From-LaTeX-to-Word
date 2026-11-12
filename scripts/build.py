@@ -146,7 +146,7 @@ def main():
                 path.unlink()
     shutil.copytree(stage, data / "third-party-notices", dirs_exist_ok=True)
     shutil.copytree(ROOT / "docs", data / "docs", dirs_exist_ok=True)
-    for name in ("LICENSE", "THIRD_PARTY_NOTICES.md", "README.md"):
+    for name in ("LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "CITATION.cff"):
         shutil.copyfile(ROOT / name, data / name)
     shutil.copytree(ROOT / "examples/article", data / "example-project", dirs_exist_ok=True)
     manifest = {

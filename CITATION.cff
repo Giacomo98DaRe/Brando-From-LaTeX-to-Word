@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use Brando in your research, please cite this software."
+title: "Brando"
+type: software
+authors:
+  - family-names: "Da Re"
+    given-names: "Giacomo"
+url: "https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word"
+repository-code: "https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word"
