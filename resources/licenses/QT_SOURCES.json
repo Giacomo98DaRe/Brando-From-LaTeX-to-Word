@@ -22,5 +22,11 @@
     "url": "https://download.qt.io/official_releases/qt/6.10/6.10.1/submodules/qtwayland-everywhere-src-6.10.1.tar.xz",
     "sha256": "49bf6db800227a6b2c971f4c5d03dd1e81297e7ffb296ce4a96437304f27cb13",
     "bytes": 901632
+  },
+  {
+    "file": "qttranslations-everywhere-src-6.10.1.tar.xz",
+    "url": "https://download.qt.io/official_releases/qt/6.10/6.10.1/submodules/qttranslations-everywhere-src-6.10.1.tar.xz",
+    "sha256": "8e49a2df88a12c376a479ae7bd272a91cf57ebb4e7c0cf7341b3565df99d2314",
+    "bytes": 1626252
   }
 ]
