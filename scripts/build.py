@@ -98,7 +98,12 @@ def linux_system_dependencies(package: Path):
     packages = set()
     for source in sorted(sources):
         # Ubuntu's /lib -> /usr/lib merge can differ from the package database spelling.
-        candidates = (source, Path(str(source).replace("/usr/lib/", "/lib/", 1)))
+        canonical = source.resolve()
+        candidates = (
+            source,
+            canonical,
+            Path(str(canonical).replace("/usr/lib/", "/lib/", 1)),
+        )
         for candidate in candidates:
             ownership = subprocess.run(
                 ["dpkg-query", "-S", str(candidate)], capture_output=True, text=True

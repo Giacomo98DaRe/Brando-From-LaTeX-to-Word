@@ -34,6 +34,15 @@ def complete(app, window):
     return ticks
 
 
+def wait_for_tooltip(text):
+    # Hover timers and native event delivery vary with CI scheduler load.
+    deadline = time.monotonic() + 2
+    while QToolTip.text() != text and time.monotonic() < deadline:
+        QTest.qWait(20)
+    assert QToolTip.isVisible()
+    assert QToolTip.text() == text
+
+
 @pytest.mark.parametrize("include_comments", [False, True])
 def test_ui_scan_convert_and_responsiveness(app, tmp_path, include_comments):
     window = Window()
@@ -255,7 +264,7 @@ def test_information_tips_wrap_and_stay_anchored(app, dark):
         buttons = window.findChildren(QToolButton, "optionInfo")
         comments = next(b for b in buttons if b.accessibleName() == "About source comments")
         QTest.mouseMove(comments, QPoint(4, 4))
-        QTest.qWait(300)
+        wait_for_tooltip(comments.toolTip())
         assert QToolTip.isVisible()
         assert QToolTip.text() == comments.toolTip()
         tip = next(w for w in app.topLevelWidgets() if w.objectName() == "qtooltip_label")
@@ -267,9 +276,8 @@ def test_information_tips_wrap_and_stay_anchored(app, dark):
         assert tip.geometry() == geometry
 
         destination = next(b for b in buttons if b.accessibleName() == "About destination")
-        QTest.mouseMove(destination)
-        QTest.qWait(300)
-        assert QToolTip.text() == destination.toolTip()
+        QTest.mouseMove(destination, QPoint(4, 4))
+        wait_for_tooltip(destination.toolTip())
         assert tip.width() <= 340
         destination.setFocus()
         QTest.keyClick(destination, Qt.Key.Key_Space)

@@ -39,7 +39,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 xvfb xauth
       - name: Create independent locked development environment
         run: uv sync --frozen --extra dev --python 3.12.16 --managed-python
       - name: Run synthetic regressions only
@@ -52,6 +52,9 @@ jobs:
         run: uv run --frozen --extra dev python scripts/build.py
       - name: Exercise packaged runtime
         run: uv run --frozen --extra dev python scripts/smoke_package.py '${{ matrix.executable }}'
+      - name: Check Linux desktop platform startup
+        if: runner.os == 'Linux'
+        run: xvfb-run -a env QT_QPA_PLATFORM=xcb BRANDO_UI_SMOKE_DIR=build/linux-desktop-smoke dist/Brando/Brando --ui-smoke
       - name: Save verified native package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
