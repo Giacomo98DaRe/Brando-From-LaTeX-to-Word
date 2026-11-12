@@ -1,44 +1,40 @@
-# Brando
+<h1><img src="src/brando/resources/brando.png" alt="" width="44" height="44" align="absmiddle"> Brando</h1>
 
-Convert an Overleaf source ZIP or LaTeX project folder into an editable Word document.
-Conversion runs on your computer. No account, upload, Word, Python or TeX installation
-is needed with the Windows app.
+Turn an Overleaf source ZIP or LaTeX project folder into an editable Word document.
+Conversion runs on your computer, with optional source comments and light or dark mode.
 
-**[Download the Windows preview](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0-preview.1)** |
-[Validation and known gaps](docs/PUBLIC_CORPUS.md)
+## Get Brando
 
-![Brando: drop a project, include source comments and convert to Word](docs/images/demo.gif)
+**[Download for Windows](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0-preview.1/Brando-0.1.0-win32-AMD64.zip)**
 
-1. Extract the entire Windows ZIP and open `Brando.exe` inside the `Brando` folder.
-2. Drop your Overleaf **source ZIP** or project folder. Select the main `.tex` document.
-3. Enable **Source comments** if wanted, choose the destination and select **Convert to Word**.
+Windows 11, x86-64. Current release is a preview. **macOS and Linux are coming!**
 
-Each conversion creates a new folder with `manuscript.docx`, readable `conversion-notes.txt`
-and a detailed `conversion-report.json`. The default destination is `Documents/Brando_exports`.
-Inputs and earlier exports stay unchanged. Try the included `example-project` first.
+![Drop a project, enable source comments and convert to Word in Brando](docs/images/demo.gif)
 
-Source notes become native Word comments beside matching text; unmatched notes use a final
-**Source annotations** section. Overleaf Review discussions are separate. Word edits do not
-synchronize back to LaTeX. A reference DOCX supplies Word styles and page geometry.
+## From project to Word
 
-This is an **unsigned Windows x86-64 preview**, tested on Windows 11. Review the resulting
-text, equations, tables, figures and citations before sharing: custom macros and layouts can
-lose content. All template families remain experimental. See the [test evidence](docs/VALIDATION.md)
-and [public-project evaluation](docs/PUBLIC_CORPUS.md). Clean-machine acceptance is still pending;
-macOS and Linux downloads are not offered yet.
-If the app reports a missing Microsoft runtime DLL, install the official
-[Visual C++ x64 runtime](https://aka.ms/vc14/vc_redist.x64.exe). It is not included in the ZIP.
+1. **Open Brando.** Extract the whole ZIP, then open `Brando/Brando.exe`.
+2. **Choose your project.** Drop an Overleaf source ZIP or folder and select the main `.tex` file.
+3. **Convert.** Choose the destination, enable **Source comments** if wanted and select **Convert to Word**.
 
-For development, use a separate Python 3.12 environment:
+The Windows app includes the conversion engine. You can start with the included `example-project`.
 
-```powershell
-uv sync --frozen --extra dev
-.venv/Scripts/python.exe -m pytest
-.venv/Scripts/pythonw.exe -m brando
-```
+## Your Word document
 
-[Build and CLI instructions](docs/BUILDING.md) | [Architecture](docs/ARCHITECTURE.md) ?
-[Sharing and feedback](docs/SHARING.md)
+- **Editable content** with supported text, tables, equations and references.
+- **Source comments** beside matching manuscript text, with unmatched notes in **Source annotations**.
+- **Conversion notes** saved beside `manuscript.docx` in a new export folder.
 
-Brando's original code is [MIT licensed](LICENSE). The app uses Qt under LGPLv3 and other
-dependencies under their own licenses; see [notices and corresponding sources](THIRD_PARTY_NOTICES.md).
+Review figures, equations, tables and citations before sharing. Custom templates and macros
+remain experimental. Setup help, comment behavior and known limits are in the
+[user guide](docs/USAGE.md).
+
+## Feedback and development
+
+Report a problem or suggest an improvement through [GitHub issues](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/issues).
+For setup, tests, builds and technical documentation, see [development](docs/BUILDING.md).
+
+## License
+
+Brando's original code is [MIT licensed](LICENSE). Dependency licenses and corresponding
+sources are listed in [third-party notices](THIRD_PARTY_NOTICES.md).
