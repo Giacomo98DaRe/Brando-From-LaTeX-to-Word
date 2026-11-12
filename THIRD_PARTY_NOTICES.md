@@ -53,11 +53,18 @@ archive also covers the original compiled translation catalogs included by PySid
 
 The directory bundle keeps shared libraries separate and replaceable. Brando imposes no
 restriction on reverse engineering for debugging modified LGPL libraries. To replace them,
-work in a copy of the extracted app: replace the matching files under `_internal/PySide6/`
-and `_internal/shiboken6/` with compatible shared libraries/bindings for the same Python ABI,
-architecture and Qt version, retaining their licenses. Alternatively build Brando from source
-with your rebuilt PySide6 environment using `scripts/build.py`. No signature or online check
-prevents replacement. Test the modified app before using its exports.
+work in a copy of the extracted app, retaining the licenses and directory links.
+
+| Package | Shared-library location |
+| --- | --- |
+| Windows / Linux | `Brando/_internal/`, including its `PySide6/` and `shiboken6/` subdirectories |
+| macOS | `Brando.app/Contents/Frameworks/`, including Qt frameworks under `PySide6/Qt/lib/` |
+
+Use compatible libraries/bindings for the same Python ABI, architecture and Qt version.
+On macOS, re-sign the modified copy with an ad-hoc signature after replacing its libraries,
+using `codesign --force --deep --sign - Brando.app`. Alternatively build Brando from source
+with your rebuilt PySide6 environment using `scripts/build.py`, which seals the completed
+Mac bundle. Test the modified app before using its exports.
 
 ## Linux system libraries
 
