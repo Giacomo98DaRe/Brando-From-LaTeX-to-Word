@@ -1,8 +1,11 @@
-# Local research inputs and agent working memory (never public repository content).
+# Local assistant instructions and resumable project memory.
+/AGENTS.md
+/history/
+
+# Local research inputs (never public repository content).
 # Keep the original handoff/corpus unchanged; publish only reviewed synthetic fixtures.
 /overleaf_word_handoff/
 /evaluation/
-/history/
 /local-projects/
 /private/
 /downloads/
