@@ -42,17 +42,18 @@ Build on the target operating system.
 | Target | Baseline and architecture | Packaged executable | Evidence |
 | --- | --- | --- | --- |
 | Windows | Windows 11 x86-64 | `dist/Brando/Brando.exe` | Local native UI, conversion checks and Windows CI |
-| macOS | macOS 14+ arm64 | `dist/Brando.app/Contents/MacOS/Brando` | macOS 15 native CI |
+| macOS | macOS 14+ arm64 and x86-64 | `dist/Brando.app/Contents/MacOS/Brando` | macOS 15 native CI for each architecture |
 | Linux | Ubuntu 24.04 x86-64 | `dist/Brando/Brando` | Ubuntu 24.04 native CI |
 
-CI runs synthetic tests, Ruff, a native build and relocated package checks on all three
-platforms. Interactive macOS/Linux acceptance is pending. Build results and rendering evidence
+CI runs synthetic tests, Ruff, a native build and relocated package checks on four native
+targets. Interactive macOS/Linux acceptance is pending. Build results and rendering evidence
 are recorded in [validation](VALIDATION.md).
 
 The builder collects runtime resources, original dependency notices, a synthetic example,
 version metadata and file hashes. Windows dependency discovery uses an isolated PATH and
 workspace cache. The Windows package uses the system Microsoft Visual C++ runtime and omits
-the optional Mesa OpenGL fallback. Corresponding library sources and replacement instructions
+the optional Mesa OpenGL fallback. Linux system-library copies are removed and their Ubuntu
+package names are recorded in `linux-system-dependencies.txt`. Corresponding library sources and replacement instructions
 are maintained in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 The package check relocates the app to a path with spaces and Unicode, restricts tool discovery
@@ -74,12 +75,13 @@ The script records Word version, text checks, native object counts, input hashes
 PDFs. Inspect the relevant rendered pages and record the scope of review. Keep downloaded
 projects and generated evidence under ignored `evaluation/`.
 
-## Prepare a stable release
+## Publish a release
 
-- Verify startup and conversion on a second Windows PC, including the documented prerequisite.
+- Run the native CI build and relocated package checks for every published target.
+- Record desktop trials separately, including the documented prerequisites and OS versions.
 - Review representative DOCX in Word for text, signed values, authors, equations, tables,
   figures, citations and comment placement. Record any remaining supported-case limits.
-- Record the results and choose a stable version/tag when those checks pass.
+- Record the results and the owner's release decision, then choose a version/tag.
 - Publish matching binaries, checksums, notices and corresponding dependency sources.
   Record the executable's signing status accurately.
 

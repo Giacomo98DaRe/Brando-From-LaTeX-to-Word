@@ -7,19 +7,24 @@ Created and maintained by **Giacomo Da Re**.
 
 ## Get Brando
 
-**[Download for Windows](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0-preview.1/Brando-0.1.0-win32-AMD64.zip)**
+| Your computer | Download |
+| --- | --- |
+| Windows, x86-64 | [Windows ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-win32-AMD64.zip) |
+| Mac, Apple Silicon | [macOS ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-arm64.zip) |
+| Mac, Intel | [macOS ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-x86_64.zip) |
+| Linux, x86-64 | [Linux archive](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-linux-x86_64.tar.gz) |
 
-Windows 11, x86-64. Current release is a preview. **macOS and Linux are coming!**
+See the [setup instructions](docs/USAGE.md) for system requirements and opening the app.
 
 ![Drop a project, enable source comments and convert to Word in Brando](docs/images/demo.gif)
 
 ## From project to Word
 
-1. **Open Brando.** Extract the whole ZIP, then open `Brando/Brando.exe`.
+1. **Open Brando.** Extract the whole archive, then open the Brando application.
 2. **Choose your project.** Drop an Overleaf source ZIP or folder and select the main `.tex` file.
 3. **Convert.** Choose the destination, enable **Source comments** if wanted and select **Convert to Word**.
 
-The Windows app includes the conversion engine. You can start with the included `example-project`.
+The app includes Python and the conversion engine. You can start with the included `example-project`.
 
 ## Your Word document
 

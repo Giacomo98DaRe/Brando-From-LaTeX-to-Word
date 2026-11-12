@@ -1,6 +1,6 @@
 # Validation
 
-Evidence collected on 2026-11-11. Documentation reviewed on 2026-11-12.
+Evidence collected on 2026-11-11 and 2026-11-12.
 
 ## Automated checks
 
@@ -8,14 +8,15 @@ Evidence collected on 2026-11-11. Documentation reviewed on 2026-11-12.
 | --- | --- |
 | Synthetic regression suite | 55 passing tests on Windows, macOS and Linux CI |
 | Python quality | Pinned Ruff check and format checks pass |
-| Native build and relocated package checks | Pass on Windows 2022, macOS 15 arm64 and Ubuntu 24.04 |
+| Native build and relocated package checks | Windows 2022, macOS 15 arm64/Intel and Ubuntu 24.04 are the release CI targets |
 | Local Windows UI | Native light/dark startup, title-bar behavior and compact-window captures checked |
-| Package integrity | 300 manifest entries, four resources and seven executable icon sizes verified |
-| Published download | Anonymous Windows ZIP download matches its published SHA-256 |
+| Package integrity | File manifests, original notices, executable architecture and archive checksums checked for release packages |
+| Additional Windows PCs | Owner reports successful trials on 2026-11-12; OS versions and detailed trial logs were not supplied |
 
-The published Windows preview was built on Windows 11 x86-64 with CPython 3.12.16.
-The release commit's full workflow is available in
-[GitHub Actions](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/actions/runs/43067969603).
+Packages use CPython 3.12.16. Native build results are available in
+[GitHub Actions](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/actions).
+The repository owner authorized the public v0.1.0 release after the Windows trials,
+with macOS/Linux desktop trials to follow publication.
 
 The suite covers bounded ZIP ingestion, path traversal, links/collisions, source preservation,
 nested inputs and bibliographies, encoding adaptation, cancellation/timeouts, atomic export,
@@ -72,13 +73,13 @@ that corpus is inconclusive.
 
 - Custom macros, complex class semantics and layouts require review. The conditional thesis
   PDF figure and Springer EPS figure need separate preparation.
-- Confirm ordinary-user startup and the conversion workflow on a second Windows PC.
 - Compare representative exports with source/PDF and test editing in Word, including equations,
   signed values, tables, references, figures and comment anchors.
 - Record LibreOffice rendering separately, with its version.
-- Exercise native macOS/Linux desktops and display scaling before publishing their downloads.
+- Exercise native macOS/Linux desktops and display scaling using the public downloads.
 
-The Windows executable is unsigned. Dependency notices and exact Qt/PySide corresponding
+The Windows executable is unsigned. The macOS app has no Developer ID signature or
+Apple notarization. Dependency notices and exact Qt/PySide corresponding
 sources accompany the release. Runtime versions, source delivery and replacement instructions
 are maintained in [third-party notices](../THIRD_PARTY_NOTICES.md). Build and acceptance commands
 are in [development](BUILDING.md).
