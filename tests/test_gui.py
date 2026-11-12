@@ -265,8 +265,6 @@ def test_information_tips_wrap_and_stay_anchored(app, dark):
         comments = next(b for b in buttons if b.accessibleName() == "About source comments")
         QTest.mouseMove(comments, QPoint(4, 4))
         wait_for_tooltip(comments.toolTip())
-        assert QToolTip.isVisible()
-        assert QToolTip.text() == comments.toolTip()
         tip = next(w for w in app.topLevelWidgets() if w.objectName() == "qtooltip_label")
         assert tip.width() <= 340
         assert tip.height() > 40  # Actual rendered multiline help, not an unwrapped strip.

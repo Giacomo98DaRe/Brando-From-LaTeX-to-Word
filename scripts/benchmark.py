@@ -130,7 +130,7 @@ def main() -> None:
                         "stderr": proc.stderr.decode("utf-8", errors="replace"),
                         "stdout": proc.stdout.decode("utf-8", errors="replace"),
                     }
-                    if dest.exists():
+                    if proc.returncode == 0 and dest.exists():
                         record["checks"] = inspect(dest, expected)
                 except subprocess.TimeoutExpired:
                     record = {"sample": name, "engine": engine, "timeout_seconds": 90}

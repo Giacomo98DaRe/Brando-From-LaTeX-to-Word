@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,13 @@ def main():
         relocated = work / "Portable Brando é" / package.name
         shutil.copytree(package, relocated, symlinks=True)
         executable = relocated / executable.relative_to(package)
+        documentation = relocated / "Contents/Resources" if sys.platform == "darwin" else relocated
+        readme = (documentation / "README.md").read_text(encoding="utf-8")
+        logo = re.search(r'<img\b[^>]*\bsrc="([^"]+)"', readme)
+        assert logo is not None
+        assert (documentation / logo[1]).read_bytes() == (
+            ROOT / "src/brando/resources/brando.png"
+        ).read_bytes()
         subprocess.run(
             [str(executable), "--ui-smoke"],
             cwd=work,

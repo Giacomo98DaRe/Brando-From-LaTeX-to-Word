@@ -61,4 +61,4 @@ requires review for macro-heavy sources. No parsing markers are inserted into th
 
 Future work should extend fidelity observations and adapters based on observed regressions,
 then tighten supported-template status. Optional generated-figure compilation needs a separate
-explicit execution policy and portable tool distribution; it is not enabled in this prototype.
+explicit execution policy and portable tool distribution. Brando currently disables it.
