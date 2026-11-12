@@ -1,7 +1,12 @@
 # Third-party notices
 
-Brando's original code and synthetic examples use the MIT license in `LICENSE`. This does
-not replace any dependency license. No code or CSL file was copied from the legacy exporter.
+Brando's original code and synthetic examples use the Apache License, Version 2.0 in `LICENSE`.
+`NOTICE` identifies Giacomo Da Re as the creator and copyright holder. Third-party components
+are distributed under the terms listed below.
+
+Brando's original code in the published `v0.1.0-preview.1` release was licensed under MIT.
+Its license is recorded at that tag. The Apache 2.0 selection applies to the current source
+and subsequent distributions. See the [earlier release license](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/blob/v0.1.0-preview.1/LICENSE).
 
 ## Runtime inventory
 

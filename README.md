@@ -38,5 +38,6 @@ For setup, tests, builds and technical documentation, see [development](docs/BUI
 
 ## License
 
-Brando's original code is [MIT licensed](LICENSE). Dependency licenses and corresponding
+Brando's original code is licensed under [Apache 2.0](LICENSE), with attribution in [NOTICE](NOTICE).
+Dependency licenses and corresponding
 sources are listed in [third-party notices](THIRD_PARTY_NOTICES.md).

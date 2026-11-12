@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use Brando in your research, please cite this software."
 title: "Brando"
 type: software
+license: Apache-2.0
 authors:
   - family-names: "Da Re"
     given-names: "Giacomo"
