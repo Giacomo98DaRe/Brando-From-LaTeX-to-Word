@@ -36,16 +36,16 @@ the engine's original notices. The example project is original synthetic materia
 
 ## Qt / LGPL distribution
 
-Brando uses unmodified Qt 6.10.1 Core, Gui, Network, Widgets and Svg through PySide6 Essentials
+Brando uses unmodified Qt 6.10.1 Core, Gui, Network, Widgets, Svg, DBus, OpenGL and Wayland through PySide6 Essentials
 and Shiboken6 6.10.1 under the LGPLv3 option. `resources/licenses/` contains the LGPLv3/GPLv3
 texts and original upstream attribution/license notices for these modules, including their
 optional bundled dependencies. A conservative notice inventory does not imply every optional
 component is linked. The Windows app does not ship the optional Mesa `opengl32sw.dll`.
 
-The preview release provides the complete upstream `qtbase`, `qtsvg` and `pyside-setup`
+The release provides the complete upstream `qtbase`, `qtsvg`, `qtwayland` and `pyside-setup`
 6.10.1 source archives alongside the application, with hashes and upstream URLs in
 [`resources/licenses/QT_SOURCES.json`](resources/licenses/QT_SOURCES.json).
-Download them from the [same release](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0-preview.1).
+Download them from the [same release](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0).
 These are source downloads for rebuilding the LGPL libraries; users do not need them to run Brando.
 Brando's matching source and build instructions are in this repository and the tagged release.
 No Qt/PySide library source modifications are made by Brando.
@@ -58,6 +58,14 @@ architecture and Qt version, retaining their licenses. Alternatively build Brand
 with your rebuilt PySide6 environment using `scripts/build.py`. No signature or online check
 prevents replacement. Test the modified app before using its exports.
 
+## Linux system libraries
+
+The Linux package uses Ubuntu system libraries for desktop services, graphics and shared
+runtime dependencies. The builder removes copies originating in `/lib` and `/usr/lib`
+and records their owning Ubuntu packages in `linux-system-dependencies.txt`. These libraries
+are installed through Ubuntu rather than redistributed in the archive. Qt/PySide, Python
+and wheel-provided libraries retain their original bundled notices.
+
 ## Windows runtime
 
 The public Windows ZIP excludes standalone Microsoft `MSVCP140*.dll` and `VCRUNTIME140*.dll`.
@@ -68,8 +76,8 @@ Python binaries; keep that notice when redistributing the app. This is separate 
 licenses for Brando and its open-source dependencies.
 
 The package includes original dependency notices under `third-party-notices/` and a version
-inventory. Keep these with any redistributed copy. The preview is unsigned; packaging checks
-are not a certification of document fidelity or clean-machine compatibility.
+inventory. Keep these with any redistributed copy. The Windows executable is unsigned.
+The macOS app has no Developer ID signature or Apple notarization.
 
 Primary references:
 

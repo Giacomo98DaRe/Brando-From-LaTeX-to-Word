@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import platform
@@ -68,6 +69,50 @@ def notices(target: Path):
         raise RuntimeError("Third-party supplemental license texts are missing.")
     shutil.copytree(extra, target / "supplemental", dirs_exist_ok=True)
     (target / "versions.json").write_text(json.dumps(versions, indent=2), encoding="utf-8")
+
+
+def linux_system_dependencies(package: Path):
+    """Use the target distribution's libraries instead of copying host system binaries."""
+    analysis = ast.literal_eval((ROOT / "build/pyinstaller/Brando/Analysis-00.toc").read_text())
+    sources = set()
+
+    def visit(value):
+        if not isinstance(value, (tuple, list)):
+            return
+        if len(value) == 3 and value[2] == "BINARY" and isinstance(value[1], str):
+            source = Path(value[1])
+            if source.is_relative_to("/lib") or source.is_relative_to("/usr/lib"):
+                sources.add(source)
+            return
+        for item in value:
+            visit(item)
+
+    visit(analysis)
+    system_hashes = {sha256(path.read_bytes()).hexdigest() for path in sources}
+    # Resolve all candidates before unlinking, including duplicate symlinks.
+    excluded = [
+        path
+        for path in package.rglob("*")
+        if path.is_file() and sha256(path.read_bytes()).hexdigest() in system_hashes
+    ]
+    packages = set()
+    for source in sorted(sources):
+        # Ubuntu's /lib -> /usr/lib merge can differ from the package database spelling.
+        candidates = (source, Path(str(source).replace("/usr/lib/", "/lib/", 1)))
+        for candidate in candidates:
+            ownership = subprocess.run(
+                ["dpkg-query", "-S", str(candidate)], capture_output=True, text=True
+            )
+            if ownership.returncode == 0:
+                break
+        ownership.check_returncode()
+        packages.update(line.split(": ", 1)[0] for line in ownership.stdout.splitlines())
+    for path in excluded:
+        path.unlink()
+    (package / "linux-system-dependencies.txt").write_text(
+        "\n".join(sorted(packages)) + "\n", encoding="utf-8"
+    )
+    print(f"Using {len(sources)} system libraries from {len(packages)} Ubuntu packages.")
 
 
 def main():
@@ -137,6 +182,8 @@ def main():
         data = package / "Contents/Resources"
     else:
         data = package
+    if sys.platform == "linux":
+        linux_system_dependencies(package)
     if sys.platform == "win32":
         # Qt Widgets uses raster painting here, not the optional Mesa OpenGL fallback.
         # Use Microsoft's separately installed runtime rather than redistributing its DLLs.
@@ -154,7 +201,7 @@ def main():
         "os": platform.platform(),
         "architecture": platform.machine(),
         "python": platform.python_version(),
-        "validation": "development build; clean-machine and document rendering checks are separate",
+        "validation": "Native package and document checks are recorded in docs/VALIDATION.md",
         "uv_lock_sha256": sha256((ROOT / "uv.lock").read_bytes()).hexdigest(),
         "files": {
             p.relative_to(package).as_posix(): sha256(p.read_bytes()).hexdigest()

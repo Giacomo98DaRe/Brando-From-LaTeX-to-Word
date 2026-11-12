@@ -16,7 +16,7 @@
     },
     "Qt-6.10.1-NOTICES.txt": {
       "sources_manifest": "QT_SOURCES.json",
-      "sha256": "050b69b70780ffbdde4f42de54cc446619911da5686313fd54632e38923a37ec",
+      "sha256": "f956169d3d76acf5fa0b796f1c701b96d9fcf013b0ff16304b973f491f31e6d6",
       "method": "Original runtime-module attribution metadata and referenced license files from the exact source archives; section headers added without editing payloads."
     }
   }

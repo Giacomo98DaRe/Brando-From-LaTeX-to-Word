@@ -1,4 +1,4 @@
-name: Synthetic tests and native development builds
+name: Tests and native packages
 
 on:
   pull_request:
@@ -18,6 +18,8 @@ jobs:
           - os: windows-2022
             executable: dist/Brando/Brando.exe
           - os: macos-15
+            executable: dist/Brando.app/Contents/MacOS/Brando
+          - os: macos-15-intel
             executable: dist/Brando.app/Contents/MacOS/Brando
           - os: ubuntu-24.04
             executable: dist/Brando/Brando
@@ -46,14 +48,14 @@ jobs:
         run: |
           uv run --frozen --extra dev ruff check src tests scripts
           uv run --frozen --extra dev ruff format --check src tests scripts
-      - name: Build reviewable development package
+      - name: Build native package
         run: uv run --frozen --extra dev python scripts/build.py
       - name: Exercise packaged runtime
         run: uv run --frozen --extra dev python scripts/smoke_package.py '${{ matrix.executable }}'
-      - name: Save development artifacts (never publish a release)
+      - name: Save verified native package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: Brando-development-${{ matrix.os }}
+          name: Brando-${{ matrix.os }}
           path: |
             dist/Brando-*.zip
             dist/Brando-*.tar.gz
