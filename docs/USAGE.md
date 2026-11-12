@@ -3,7 +3,7 @@
 ## Install and open
 
 Download the archive for your computer from the
-[release page](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0).
+[release page](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0).
 The app includes Python and the conversion engine. Extract the whole archive before opening it.
 
 ### Windows
@@ -93,4 +93,4 @@ attachments, including those inside ZIPs. See [Google Chat attachment restrictio
 Include the Brando version, operating system, Word version, expected behavior and actual behavior in
 your report. A small original example helps reproduce a problem. Review conversion reports
 for local paths and source text before posting. Submit feedback through
-[GitHub issues](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/issues).
+[GitHub issues](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/issues).

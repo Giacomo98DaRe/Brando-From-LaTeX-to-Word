@@ -15,7 +15,7 @@ Evidence collected on 2026-11-11 and 2026-11-12.
 | Additional Windows PCs | Owner reports successful trials on 2026-11-12; OS versions and detailed trial logs were not supplied |
 
 Packages use CPython 3.12.16. Native build results are available in
-[GitHub Actions](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/actions).
+[GitHub Actions](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/actions).
 The repository owner authorized the public v0.1.0 release after the Windows trials,
 with macOS/Linux desktop trials to follow publication.
 

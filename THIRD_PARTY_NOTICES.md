@@ -6,7 +6,7 @@ are distributed under the terms listed below.
 
 Brando's original code in the published `v0.1.0-preview.1` release was licensed under MIT.
 Its license is recorded at that tag. The Apache 2.0 selection applies to the current source
-and subsequent distributions. See the [earlier release license](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/blob/v0.1.0-preview.1/LICENSE).
+and subsequent distributions. See the [earlier release license](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/blob/v0.1.0-preview.1/LICENSE).
 
 ## Runtime inventory
 
@@ -45,7 +45,7 @@ component is linked. The Windows app does not ship the optional Mesa `opengl32sw
 The release provides the complete upstream `qtbase`, `qtsvg`, `qtwayland`, `qttranslations` and `pyside-setup`
 6.10.1 source archives alongside the application, with hashes and upstream URLs in
 [`resources/licenses/QT_SOURCES.json`](resources/licenses/QT_SOURCES.json).
-Download them from the [same release](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0).
+Download them from the [same release](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/tag/v0.1.0).
 These are source downloads for rebuilding the LGPL libraries; users do not need them to run Brando.
 Brando's matching source and build instructions are in this repository and the tagged release.
 No Qt/PySide library source modifications are made by Brando. The Qt translations source

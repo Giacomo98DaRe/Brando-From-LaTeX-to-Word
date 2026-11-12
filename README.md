@@ -9,10 +9,10 @@ Created and maintained by **Giacomo Da Re**.
 
 | Your computer | Download |
 | --- | --- |
-| Windows, x86-64 | [Windows ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-win32-AMD64.zip) |
-| Mac, Apple Silicon | [macOS ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-arm64.zip) |
-| Mac, Intel | [macOS ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-x86_64.zip) |
-| Linux, x86-64 | [Linux archive](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-linux-x86_64.tar.gz) |
+| Windows, x86-64 | [Windows ZIP](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-win32-AMD64.zip) |
+| Mac, Apple Silicon | [macOS ZIP](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-arm64.zip) |
+| Mac, Intel | [macOS ZIP](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-x86_64.zip) |
+| Linux, x86-64 | [Linux archive](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-linux-x86_64.tar.gz) |
 
 ### Windows
 
@@ -60,7 +60,7 @@ remain experimental. Setup help, comment behavior and known limits are in the
 
 If Brando helps your work, consider giving the repository a star on GitHub.
 
-Report a problem or suggest an improvement through [GitHub issues](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/issues).
+Report a problem or suggest an improvement through [GitHub issues](https://github.com/digital-medicine-research-group-UNAV/Brando-From-LaTeX-to-Word/issues).
 For setup, tests, builds and technical documentation, see [development](docs/BUILDING.md).
 
 ## License
