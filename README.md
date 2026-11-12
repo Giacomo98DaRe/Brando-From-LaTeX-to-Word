@@ -58,6 +58,8 @@ remain experimental. Setup help, comment behavior and known limits are in the
 
 ## Feedback and development
 
+If Brando helps your work, consider giving the repository a star on GitHub.
+
 Report a problem or suggest an improvement through [GitHub issues](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/issues).
 For setup, tests, builds and technical documentation, see [development](docs/BUILDING.md).
 

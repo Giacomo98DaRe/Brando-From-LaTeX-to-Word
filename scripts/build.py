@@ -198,7 +198,7 @@ def main():
                 path.unlink()
     shutil.copytree(stage, data / "third-party-notices", dirs_exist_ok=True)
     shutil.copytree(ROOT / "docs", data / "docs", dirs_exist_ok=True)
-    for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "CITATION.cff"):
+    for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
         shutil.copyfile(ROOT / name, data / name)
     # The packaged README uses the existing frozen resource instead of the source tree.
     resource_prefix = "" if sys.platform == "darwin" else "_internal/"
