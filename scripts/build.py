@@ -198,8 +198,16 @@ def main():
                 path.unlink()
     shutil.copytree(stage, data / "third-party-notices", dirs_exist_ok=True)
     shutil.copytree(ROOT / "docs", data / "docs", dirs_exist_ok=True)
-    for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "README.md", "CITATION.cff"):
+    for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "CITATION.cff"):
         shutil.copyfile(ROOT / name, data / name)
+    # The packaged README uses the existing frozen resource instead of the source tree.
+    resource_prefix = "" if sys.platform == "darwin" else "_internal/"
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme = readme.replace(
+        'src="src/brando/resources/brando.png"',
+        f'src="{resource_prefix}brando/resources/brando.png"',
+    )
+    (data / "README.md").write_text(readme, encoding="utf-8")
     shutil.copytree(ROOT / "examples/article", data / "example-project", dirs_exist_ok=True)
     # Final macOS signing rewrites the main executable and signature envelopes.
     # Their integrity is covered by codesign and the complete archive checksum.
