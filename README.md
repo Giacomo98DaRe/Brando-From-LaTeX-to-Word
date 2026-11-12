@@ -3,7 +3,7 @@
 Turn an Overleaf source ZIP or LaTeX project folder into an editable Word document.
 Conversion runs on your computer, with optional source comments and light or dark mode.
 
-Created and maintained by **Giacomo Da Re**. [Cite Brando](CITATION.cff).
+Created and maintained by **Giacomo Da Re**.
 
 ## Get Brando
 
