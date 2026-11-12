@@ -8,7 +8,8 @@ Evidence collected on 2026-11-11 and 2026-11-12.
 | --- | --- |
 | Synthetic regression suite | 55 passing tests on Windows, macOS and Linux CI |
 | Python quality | Pinned Ruff check and format checks pass |
-| Native build and relocated package checks | Windows 2022, macOS 15 arm64/Intel and Ubuntu 24.04 are the release CI targets |
+| Native build and relocated package checks | Pass on Windows 2022, macOS 15 arm64/Intel and Ubuntu 24.04 |
+| Linux graphical platform | Packaged XCB startup and both palettes pass under Xvfb |
 | Local Windows UI | Native light/dark startup, title-bar behavior and compact-window captures checked |
 | Package integrity | File manifests, original notices, executable architecture and archive checksums checked for release packages |
 | Additional Windows PCs | Owner reports successful trials on 2026-11-12; OS versions and detailed trial logs were not supplied |

@@ -14,7 +14,27 @@ Created and maintained by **Giacomo Da Re**.
 | Mac, Intel | [macOS ZIP](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-darwin-x86_64.zip) |
 | Linux, x86-64 | [Linux archive](https://github.com/Giacomo98DaRe/Brando-From-LaTeX-to-Word/releases/download/v0.1.0/Brando-0.1.0-linux-x86_64.tar.gz) |
 
-See the [setup instructions](docs/USAGE.md) for system requirements and opening the app.
+### Windows
+
+Extract the whole ZIP and open `Brando/Brando.exe`. Keep the extracted folder together.
+Windows 11 is the tested desktop baseline. A missing runtime message has a quick fix in
+the [setup guide](docs/USAGE.md#windows).
+
+### macOS
+
+Use the Apple Silicon or Intel ZIP for your Mac, extract it and open `Brando.app`.
+Requires macOS 14+. If the first launch is blocked, use **Privacy & Security > Open Anyway**
+for Brando. See [macOS setup](docs/USAGE.md#macos).
+
+### Linux
+
+On Ubuntu 24.04 x86-64, extract the archive, install its listed runtime libraries and start Brando.
+
+```sh
+tar -xzf Brando-0.1.0-linux-x86_64.tar.gz
+sudo apt install $(cat Brando/linux-system-dependencies.txt)
+./Brando/Brando
+```
 
 ![Drop a project, enable source comments and convert to Word in Brando](docs/images/demo.gif)
 
