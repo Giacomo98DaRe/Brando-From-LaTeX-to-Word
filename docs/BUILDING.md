@@ -56,6 +56,11 @@ the optional Mesa OpenGL fallback. Linux system-library copies are removed and t
 package names are recorded in `linux-system-dependencies.txt`. Corresponding library sources and replacement instructions
 are maintained in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
+The macOS builder reapplies an ad-hoc signature after adding documentation and notices, then
+verifies the complete bundle with `codesign --verify --deep --strict`. The file manifest excludes
+the rewritten main executable and signature envelopes. The archive checksum covers every byte.
+Developer ID signing and Apple notarization require separate release credentials.
+
 The package check relocates the app to a path with spaces and Unicode, restricts tool discovery
 and checks both palettes, ZIP conversion, comments, equations, numeric values, a PDF figure
 and bounded worker failures. Interactive acceptance also covers cancellation, retries,

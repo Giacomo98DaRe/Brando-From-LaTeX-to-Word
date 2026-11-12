@@ -201,6 +201,12 @@ def main():
     for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "README.md", "CITATION.cff"):
         shutil.copyfile(ROOT / name, data / name)
     shutil.copytree(ROOT / "examples/article", data / "example-project", dirs_exist_ok=True)
+    # Final macOS signing rewrites the main executable and signature envelopes.
+    # Their integrity is covered by codesign and the complete archive checksum.
+    signing_outputs = set()
+    if sys.platform == "darwin":
+        signing_outputs = {package / "Contents/MacOS/Brando"}
+        signing_outputs.update(p for p in package.rglob("*") if "_CodeSignature" in p.parts)
     manifest = {
         "app_version": __version__,
         "os": platform.platform(),
@@ -211,12 +217,27 @@ def main():
         "files": {
             p.relative_to(package).as_posix(): sha256(p.read_bytes()).hexdigest()
             for p in package.rglob("*")
-            if p.is_file()
+            if p.is_file() and p not in signing_outputs
         },
     }
+    if sys.platform == "darwin":
+        manifest["signing"] = "ad-hoc; no Developer ID signature or Apple notarization"
+        manifest["signing_outputs_excluded"] = [
+            "Contents/MacOS/Brando",
+            "**/_CodeSignature/**",
+        ]
     (data / "build-manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     tag = f"Brando-{__version__}-{sys.platform}-{platform.machine()}"
     if sys.platform == "darwin":
+        # PyInstaller signs before the documentation/notices above are added. Seal the
+        # complete bundle again, preserving the already signed nested libraries.
+        subprocess.run(
+            ["/usr/bin/codesign", "--force", "--sign", "-", "--timestamp=none", str(package)],
+            check=True,
+        )
+        subprocess.run(
+            ["/usr/bin/codesign", "--verify", "--deep", "--strict", str(package)], check=True
+        )
         archive = str(ROOT / "dist" / (tag + ".zip"))
         subprocess.run(
             [
